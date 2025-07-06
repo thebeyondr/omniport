@@ -118,7 +118,6 @@ function RouteComponent() {
 	// Handle email verification success
 	useEffect(() => {
 		if (search.emailVerified) {
-			alert(1);
 			toast({
 				title: "Email verified successfully!",
 				description: "Your email address has been verified.",
