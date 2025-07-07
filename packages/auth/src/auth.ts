@@ -132,6 +132,7 @@ export const auth: ReturnType<typeof betterAuth> = betterAuth({
 						<p>Please click the link below to verify your email address:</p>
 						<a href="${url}">Verify Email</a>
 						<p>If you didn't create an account, you can safely ignore this email.</p>
+						<p>Have feedback? Let us know by replying to this email – we might also have some free credits for you!</p>
 					`,
 				});
 			} catch (error) {
