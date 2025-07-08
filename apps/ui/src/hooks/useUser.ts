@@ -73,7 +73,11 @@ export function useUser(options?: UseUserOptions) {
 		const hasUser = !!data?.user;
 
 		if (redirectWhen === "authenticated" && hasUser) {
-			if (checkOnboarding && !data.user.onboardingCompleted) {
+			if (
+				checkOnboarding &&
+				!data.user.onboardingCompleted &&
+				routerState.location.pathname !== "/onboarding"
+			) {
 				navigate({ to: "/onboarding" });
 			} else {
 				navigate({ to: redirectTo });
@@ -86,15 +90,12 @@ export function useUser(options?: UseUserOptions) {
 			navigate({ to: redirectTo, replace: true });
 		}
 	}, [
-		data?.user,
+		data,
 		isLoading,
 		error,
 		navigate,
-		options?.redirectTo,
-		options?.redirectWhen,
-		options?.checkOnboarding,
-		options?.checkEmailVerification,
 		options,
+		routerState.location.pathname,
 	]);
 
 	return {
