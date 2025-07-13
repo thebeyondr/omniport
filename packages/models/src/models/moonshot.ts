@@ -9,8 +9,8 @@ export const moonshotModels = [
 			{
 				providerId: "novita",
 				modelName: "moonshotai/kimi-k2-instruct",
-				inputPrice: 0.57,
-				outputPrice: 2.3,
+				inputPrice: 0.57 / 1e6,
+				outputPrice: 2.3 / 1e6,
 				requestPrice: 0,
 				contextSize: 131072,
 				maxOutput: 131072,
@@ -20,9 +20,9 @@ export const moonshotModels = [
 			{
 				providerId: "moonshot",
 				modelName: "kimi-k2-0711-preview",
-				inputPrice: 0.6,
-				outputPrice: 2.5,
-				cachedInputPrice: 0.15,
+				inputPrice: 0.6 / 1e6,
+				outputPrice: 2.5 / 1e6,
+				cachedInputPrice: 0.15 / 1e6,
 				requestPrice: 0,
 				contextSize: 128000,
 				maxOutput: 128000,
