@@ -321,6 +321,7 @@ async function handlePaymentIntentSucceeded(
 
 	const result = await resolveOrganizationFromStripeEvent({
 		metadata,
+		customer: paymentIntent.customer as string,
 	});
 
 	if (!result) {
@@ -431,6 +432,7 @@ async function handlePaymentIntentFailed(
 
 	const result = await resolveOrganizationFromStripeEvent({
 		metadata,
+		customer: paymentIntent.customer as string,
 	});
 
 	if (!result) {
