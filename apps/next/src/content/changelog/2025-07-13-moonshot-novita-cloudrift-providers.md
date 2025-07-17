@@ -1,11 +1,11 @@
 ---
 id: "7"
-slug: "moonshot-novita-providers"
+slug: "moonshot-novita-cloudrift-providers"
 date: "2025-07-13"
 title: "New Providers: Moonshot AI and Novita AI Support"
 summary: "Added support for Moonshot AI and Novita AI providers, both offering the powerful kimi-k2 model with extensive context windows and competitive pricing."
 image:
-  src: "/changelog/moonshot-novita-providers.png"
+  src: "/changelog/moonshot-novita-cloudrift-providers.png"
   alt: "Dashboard showing new Moonshot AI and Novita AI providers"
   width: 800
   height: 400
