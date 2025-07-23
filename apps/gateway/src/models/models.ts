@@ -1,5 +1,10 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { models as modelsList } from "@llmgateway/models";
+import {
+	models as modelsList,
+	providers,
+	type ProviderModelMapping,
+	type ModelDefinition,
+} from "@llmgateway/models";
 import { HTTPException } from "hono/http-exception";
 
 import type { ServerTypes } from "../vars";
@@ -30,6 +35,9 @@ const modelSchema = z.object({
 					image: z.string().optional(),
 				})
 				.optional(),
+			streaming: z.boolean(),
+			vision: z.boolean(),
+			cancellation: z.boolean(),
 		}),
 	),
 	pricing: z.object({
@@ -43,9 +51,11 @@ const modelSchema = z.object({
 		internal_reasoning: z.string().optional(),
 	}),
 	context_length: z.number().optional(),
-	hugging_face_id: z.string().optional(),
 	per_request_limits: z.record(z.string()).optional(),
 	supported_parameters: z.array(z.string()).optional(),
+	json_output: z.boolean(),
+	deprecated_at: z.string().optional(),
+	deactivated_at: z.string().optional(),
 });
 
 const listModelsResponseSchema = z.object({
@@ -73,30 +83,28 @@ const listModels = createRoute({
 
 modelsApi.openapi(listModels, async (c) => {
 	try {
-		const modelData = modelsList.map((model) => {
+		const modelData = modelsList.map((model: ModelDefinition) => {
 			// Determine input modalities (if model supports images)
 			const inputModalities: ("text" | "image")[] = ["text"];
 
-			// Check if any provider has imageInputPrice property and it's defined
-			if (
-				model.providers.some((p) => (p as any).imageInputPrice !== undefined)
-			) {
+			// Check if any provider has vision support
+			if (model.providers.some((p) => p.vision)) {
 				inputModalities.push("image");
 			}
 
 			const firstProviderWithPricing = model.providers.find(
-				(p) =>
-					(p as any).inputPrice !== undefined ||
-					(p as any).outputPrice !== undefined ||
-					(p as any).imageInputPrice !== undefined,
+				(p: ProviderModelMapping) =>
+					p.inputPrice !== undefined ||
+					p.outputPrice !== undefined ||
+					p.imageInputPrice !== undefined,
 			);
 
 			const inputPrice =
-				(firstProviderWithPricing as any)?.inputPrice?.toString() || "0";
+				firstProviderWithPricing?.inputPrice?.toString() || "0";
 			const outputPrice =
-				(firstProviderWithPricing as any)?.outputPrice?.toString() || "0";
+				firstProviderWithPricing?.outputPrice?.toString() || "0";
 			const imagePrice =
-				(firstProviderWithPricing as any)?.imageInputPrice?.toString() || "0";
+				firstProviderWithPricing?.imageInputPrice?.toString() || "0";
 
 			return {
 				id: model.model,
@@ -111,20 +119,30 @@ modelsApi.openapi(listModels, async (c) => {
 				top_provider: {
 					is_moderated: true,
 				},
-				providers: model.providers.map((provider) => ({
-					providerId: provider.providerId,
-					modelName: provider.modelName,
-					pricing:
-						(provider as any).inputPrice !== undefined ||
-						(provider as any).outputPrice !== undefined ||
-						(provider as any).imageInputPrice !== undefined
-							? {
-									prompt: (provider as any).inputPrice?.toString() || "0",
-									completion: (provider as any).outputPrice?.toString() || "0",
-									image: (provider as any).imageInputPrice?.toString() || "0",
-								}
-							: undefined,
-				})),
+				providers: model.providers.map((provider: ProviderModelMapping) => {
+					// Find the provider definition to get cancellation support
+					const providerDef = providers.find(
+						(p) => p.id === provider.providerId,
+					);
+
+					return {
+						providerId: provider.providerId,
+						modelName: provider.modelName,
+						pricing:
+							provider.inputPrice !== undefined ||
+							provider.outputPrice !== undefined ||
+							provider.imageInputPrice !== undefined
+								? {
+										prompt: provider.inputPrice?.toString() || "0",
+										completion: provider.outputPrice?.toString() || "0",
+										image: provider.imageInputPrice?.toString() || "0",
+									}
+								: undefined,
+						streaming: provider.streaming,
+						vision: provider.vision || false,
+						cancellation: providerDef?.cancellation || false,
+					};
+				}),
 				pricing: {
 					prompt: inputPrice,
 					completion: outputPrice,
@@ -139,6 +157,10 @@ modelsApi.openapi(listModels, async (c) => {
 				context_length: getContextLength(model.model),
 				// Add supported parameters
 				supported_parameters: getSupportedParameters(model.model),
+				// Add model-level capabilities
+				json_output: model.jsonOutput || false,
+				deprecated_at: model.deprecatedAt?.toISOString(),
+				deactivated_at: model.deactivatedAt?.toISOString(),
 			};
 		});
 
