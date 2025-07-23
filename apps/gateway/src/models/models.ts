@@ -114,7 +114,7 @@ modelsApi.openapi(listModels, async (c) => {
 				architecture: {
 					input_modalities: inputModalities,
 					output_modalities: ["text"] as ["text"],
-					tokenizer: "GPT", // Default tokenizer
+					tokenizer: "GPT", // TODO: Should come from model definitions when available
 				},
 				top_provider: {
 					is_moderated: true,
@@ -147,15 +147,18 @@ modelsApi.openapi(listModels, async (c) => {
 					prompt: inputPrice,
 					completion: outputPrice,
 					image: imagePrice,
-					request: "0",
-					input_cache_read: "0",
-					input_cache_write: "0",
-					web_search: "0",
-					internal_reasoning: "0",
+					request: firstProviderWithPricing?.requestPrice?.toString() || "0",
+					input_cache_read:
+						firstProviderWithPricing?.cachedInputPrice?.toString() || "0",
+					input_cache_write: "0", // Not defined in model definitions yet
+					web_search: "0", // Not defined in model definitions yet
+					internal_reasoning: "0", // Not defined in model definitions yet
 				},
-				// Estimate context length based on model name
-				context_length: getContextLength(model.model),
-				// Add supported parameters
+				// Use context length from model definition (take the largest from all providers)
+				context_length:
+					Math.max(...model.providers.map((p) => p.contextSize || 0)) ||
+					undefined,
+				// TODO: supported_parameters should come from model definitions when available
 				supported_parameters: getSupportedParameters(model.model),
 				// Add model-level capabilities
 				json_output: model.jsonOutput || false,
@@ -171,31 +174,8 @@ modelsApi.openapi(listModels, async (c) => {
 	}
 });
 
-// Helper function to estimate context length based on model name
-function getContextLength(modelName: string): number {
-	if (modelName.includes("gpt-4o")) {
-		return 128000;
-	} else if (modelName.includes("gpt-4")) {
-		return 8192;
-	} else if (modelName.includes("gpt-3.5")) {
-		return 16385;
-	} else if (modelName.includes("llama-3.3")) {
-		return 128000;
-	} else if (modelName.includes("llama-3.1")) {
-		return 128000;
-	} else if (modelName.includes("llama-3")) {
-		return 8192;
-	} else if (modelName.includes("claude")) {
-		return 200000;
-	} else if (modelName.includes("gemini")) {
-		return 32768;
-	}
-
-	// Default context length
-	return 8192;
-}
-
 // Helper function to determine supported parameters based on model name
+// TODO: This should be moved to model definitions instead of hardcoded logic
 function getSupportedParameters(modelName: string): string[] {
 	const baseParams = [
 		"temperature",
