@@ -2,7 +2,7 @@ name: claude
 
 on:
   pull_request:
-    types: [review_requested]
+    types: [opened, synchronize, review_requested]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -11,9 +11,6 @@ concurrency:
 jobs:
   review:
     runs-on: ubuntu-latest
-
-    if: github.event.requested_reviewer.login == 'claude[bot]'
-
     permissions:
       contents: read
       pull-requests: write
@@ -30,16 +27,6 @@ jobs:
         id: check-claude-requested
         run: |
           CLAUDE_REQUESTED=false
-
-          # Check if this is a review request event
-          if [[ "${{ github.event_name }}" == "pull_request_review_requested" ]]; then
-            # Check if Claude (or claude bot) was requested as reviewer
-            REQUESTED_REVIEWER="${{ github.event.requested_reviewer.login }}"
-            if [[ "$REQUESTED_REVIEWER" == *"claude"* ]] || [[ "$REQUESTED_REVIEWER" == *"Claude"* ]]; then
-              CLAUDE_REQUESTED=true
-              echo "Claude was requested as reviewer: $REQUESTED_REVIEWER"
-            fi
-          fi
 
           # Check if this is a comment event with @claude mention
           if [[ "${{ github.event_name }}" == "issue_comment" ]]; then
