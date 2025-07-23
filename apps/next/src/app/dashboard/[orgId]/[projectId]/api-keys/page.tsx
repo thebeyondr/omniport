@@ -1,6 +1,8 @@
 "use client";
 
 import { Plus } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useMemo } from "react";
 
 import { ApiKeysList } from "@/components/api-keys/api-keys-list";
 import { CreateApiKeyDialog } from "@/components/api-keys/create-api-key-dialog";
@@ -12,10 +14,49 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/lib/components/card";
-import { useDashboardState } from "@/lib/dashboard-state";
+import { useApi } from "@/lib/fetch-client";
+import { extractOrgAndProjectFromPath } from "@/lib/navigation-utils";
+
+import type { Project } from "@/lib/types";
 
 export default function ApiKeysPage() {
-	const { selectedProject } = useDashboardState();
+	const pathname = usePathname();
+
+	// Extract project and org IDs directly from URL to avoid dashboard state conflicts
+	const { projectId, orgId } = useMemo(() => {
+		const result = extractOrgAndProjectFromPath(pathname);
+		return result;
+	}, [pathname]);
+
+	// Fetch actual project data instead of using mock values
+	const api = useApi();
+
+	const { data: projectsData } = api.useQuery(
+		"get",
+		"/orgs/{id}/projects",
+		{
+			params: {
+				path: { id: orgId || "" },
+			},
+		},
+		{
+			enabled: !!orgId,
+			staleTime: 5 * 60 * 1000, // 5 minutes
+			refetchOnWindowFocus: false,
+		},
+	);
+
+	// Find the actual project from the fetched data
+	const selectedProject = useMemo((): Project | null => {
+		if (!projectId || !projectsData?.projects) {
+			return null;
+		}
+
+		const actualProject = projectsData.projects.find(
+			(p: Project) => p.id === projectId,
+		);
+		return actualProject || null;
+	}, [projectId, projectsData]);
 
 	return (
 		<div className="flex flex-col">
@@ -44,7 +85,7 @@ export default function ApiKeysPage() {
 								API keys allow you to authenticate with the LLM Gateway API.
 								{!selectedProject && (
 									<span className="block mt-2 text-amber-600">
-										Please select a project to manage API keys.
+										Loading project information...
 									</span>
 								)}
 							</CardDescription>
