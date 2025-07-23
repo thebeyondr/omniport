@@ -1,5 +1,6 @@
 import React from "react";
 
+import AlibabaLogo from "@/assets/models/alibaba.svg?react";
 import anthropicLogo from "@/assets/models/anthropic.svg?react";
 import CloudRiftLogo from "@/assets/models/cloudrift.svg?react";
 import DeepSeekLogo from "@/assets/models/deepseek.svg?react";
@@ -49,5 +50,6 @@ export const providerLogoComponents: Partial<
 	perplexity: PerplexityLogo,
 	moonshot: MoonshotLogo,
 	novita: NovitaLogo,
+	alibaba: AlibabaLogo,
 	custom: CustomProviderLogo,
 };
