@@ -88,6 +88,8 @@ export interface LogsData {
 		topP: number | null;
 		frequencyPenalty: number | null;
 		presencePenalty: number | null;
+		tools: string | null;
+		toolChoice: string | null;
 		hasError: boolean | null;
 		errorDetails: {
 			statusCode: number;

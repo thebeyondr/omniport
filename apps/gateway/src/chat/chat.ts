@@ -81,6 +81,8 @@ function createLogEntry(
 	top_p: number | undefined,
 	frequency_penalty: number | undefined,
 	presence_penalty: number | undefined,
+	tools: any[] | undefined,
+	toolChoice: any | undefined,
 ) {
 	return {
 		requestId,
@@ -98,6 +100,8 @@ function createLogEntry(
 		topP: top_p || null,
 		frequencyPenalty: frequency_penalty || null,
 		presencePenalty: presence_penalty || null,
+		tools: tools || null,
+		toolChoice: toolChoice || null,
 		mode: project.mode,
 	} as const;
 }
@@ -336,66 +340,6 @@ function extractReasoningContentFromProvider(
 			return data.choices?.[0]?.delta?.reasoning_content || "";
 		default: // OpenAI format
 			return data.choices?.[0]?.delta?.reasoning_content || "";
-	}
-}
-
-/**
- * Extracts tool calls from streaming data based on provider format
- */
-function extractToolCallsFromProvider(
-	data: any,
-	provider: Provider,
-): Array<{
-	id: string;
-	type: string;
-	function: {
-		name: string;
-		arguments: string;
-	};
-}> | null {
-	switch (provider) {
-		case "anthropic":
-			// For Anthropic, tool calls come in content_block_start and content_block_delta events
-			if (
-				data.type === "content_block_start" &&
-				data.content_block?.type === "tool_use"
-			) {
-				return [
-					{
-						id: data.content_block.id,
-						type: "function",
-						function: {
-							name: data.content_block.name,
-							arguments: "",
-						},
-					},
-				];
-			} else if (
-				data.type === "content_block_delta" &&
-				data.delta?.partial_json
-			) {
-				// Return partial arguments for accumulation
-				return [
-					{
-						id: "", // Will be matched by index
-						type: "function",
-						function: {
-							name: "",
-							arguments: data.delta.partial_json,
-						},
-					},
-				];
-			}
-			return null;
-		case "inference.net":
-		case "together.ai":
-		case "groq":
-		case "deepseek":
-		case "perplexity":
-		case "alibaba":
-			return data.choices?.[0]?.delta?.tool_calls || null;
-		default: // OpenAI format
-			return data.choices?.[0]?.delta?.tool_calls || null;
 	}
 }
 
@@ -1666,14 +1610,6 @@ chat.openapi(completions, async (c) => {
 				let totalTokens = null;
 				let reasoningTokens = null;
 				let cachedTokens = null;
-				let fullToolCalls: Array<{
-					id: string;
-					type: string;
-					function: {
-						name: string;
-						arguments: string;
-					};
-				}> = [];
 
 				for (const chunk of cachedStreamingResponse.chunks) {
 					try {
@@ -1688,42 +1624,6 @@ chat.openapi(completions, async (c) => {
 						if (chunkData.choices?.[0]?.delta?.reasoning_content) {
 							fullReasoningContent +=
 								chunkData.choices[0].delta.reasoning_content;
-						}
-
-						// Accumulate tool calls from streaming chunks
-						if (chunkData.choices?.[0]?.delta?.tool_calls) {
-							const deltaToolCalls = chunkData.choices[0].delta.tool_calls;
-							for (const deltaToolCall of deltaToolCalls) {
-								const index = deltaToolCall.index || 0;
-
-								// Ensure we have a tool call at this index
-								while (fullToolCalls.length <= index) {
-									fullToolCalls.push({
-										id: "",
-										type: "function",
-										function: {
-											name: "",
-											arguments: "",
-										},
-									});
-								}
-
-								// Accumulate the tool call data
-								if (deltaToolCall.id) {
-									fullToolCalls[index].id = deltaToolCall.id;
-								}
-								if (deltaToolCall.type) {
-									fullToolCalls[index].type = deltaToolCall.type;
-								}
-								if (deltaToolCall.function?.name) {
-									fullToolCalls[index].function.name =
-										deltaToolCall.function.name;
-								}
-								if (deltaToolCall.function?.arguments) {
-									fullToolCalls[index].function.arguments +=
-										deltaToolCall.function.arguments;
-								}
-							}
 						}
 
 						// Extract usage information (usually in the last chunks)
@@ -1767,6 +1667,8 @@ chat.openapi(completions, async (c) => {
 					top_p,
 					frequency_penalty,
 					presence_penalty,
+					tools,
+					tool_choice,
 				);
 
 				await insertLog({
@@ -1775,7 +1677,6 @@ chat.openapi(completions, async (c) => {
 					responseSize: JSON.stringify(cachedStreamingResponse).length,
 					content: fullContent || null,
 					reasoningContent: fullReasoningContent || null,
-					toolCalls: fullToolCalls.length > 0 ? fullToolCalls : null,
 					finishReason: cachedStreamingResponse.metadata.finishReason,
 					promptTokens: promptTokens?.toString() || null,
 					completionTokens: completionTokens?.toString() || null,
@@ -1842,6 +1743,8 @@ chat.openapi(completions, async (c) => {
 					top_p,
 					frequency_penalty,
 					presence_penalty,
+					tools,
+					tool_choice,
 				);
 
 				await insertLog({
@@ -2005,6 +1908,8 @@ chat.openapi(completions, async (c) => {
 						top_p,
 						frequency_penalty,
 						presence_penalty,
+						tools,
+						tool_choice,
 					);
 
 					await insertLog({
@@ -2088,6 +1993,8 @@ chat.openapi(completions, async (c) => {
 					top_p,
 					frequency_penalty,
 					presence_penalty,
+					tools,
+					tool_choice,
 				);
 
 				await insertLog({
@@ -2148,14 +2055,6 @@ chat.openapi(completions, async (c) => {
 			let totalTokens = null;
 			let reasoningTokens = null;
 			let cachedTokens = null;
-			let fullToolCalls: Array<{
-				id: string;
-				type: string;
-				function: {
-					name: string;
-					arguments: string;
-				};
-			}> | null = null;
 			let buffer = ""; // Buffer for accumulating partial data across chunks
 			const MAX_BUFFER_SIZE = 10 * 1024 * 1024; // 10MB limit
 
@@ -2247,31 +2146,6 @@ chat.openapi(completions, async (c) => {
 									extractReasoningContentFromProvider(data, usedProvider);
 								if (reasoningContentChunk) {
 									fullReasoningContent += reasoningContentChunk;
-								}
-
-								// Extract tool calls for logging using helper function
-								const toolCallsChunk = extractToolCallsFromProvider(
-									data,
-									usedProvider,
-								);
-								if (toolCallsChunk) {
-									if (!fullToolCalls) {
-										fullToolCalls = [];
-									}
-									// For Google providers, accumulate tool calls
-									for (const toolCall of toolCallsChunk) {
-										const existingIndex = fullToolCalls.findIndex(
-											(tc) => tc.id === toolCall.id,
-										);
-										if (existingIndex >= 0) {
-											// Update existing tool call
-											fullToolCalls[existingIndex].function.arguments +=
-												toolCall.function.arguments;
-										} else {
-											// Add new tool call
-											fullToolCalls.push(toolCall);
-										}
-									}
 								}
 
 								// Check for finish reason
@@ -2462,67 +2336,6 @@ chat.openapi(completions, async (c) => {
 											extractReasoningContentFromProvider(data, usedProvider);
 										if (reasoningContentChunk) {
 											fullReasoningContent += reasoningContentChunk;
-										}
-
-										// Extract tool calls using helper function
-										const toolCallsChunk = extractToolCallsFromProvider(
-											data,
-											usedProvider,
-										);
-										if (toolCallsChunk) {
-											if (!fullToolCalls) {
-												fullToolCalls = [];
-											}
-
-											if (usedProvider === "anthropic") {
-												// For Anthropic, handle content_block_start and content_block_delta
-												for (const toolCall of toolCallsChunk) {
-													if (data.type === "content_block_start") {
-														// New tool call
-														fullToolCalls.push(toolCall);
-													} else if (data.type === "content_block_delta") {
-														// Accumulate arguments for the last tool call
-														const lastIndex = fullToolCalls.length - 1;
-														if (lastIndex >= 0) {
-															fullToolCalls[lastIndex].function.arguments +=
-																toolCall.function.arguments;
-														}
-													}
-												}
-											} else {
-												// For OpenAI format providers - these have index and delta format
-												for (const deltaToolCall of toolCallsChunk as any[]) {
-													const index = deltaToolCall.index || 0;
-
-													// Ensure we have a tool call at this index
-													while (fullToolCalls.length <= index) {
-														fullToolCalls.push({
-															id: "",
-															type: "function",
-															function: {
-																name: "",
-																arguments: "",
-															},
-														});
-													}
-
-													// Accumulate the tool call data
-													if (deltaToolCall.id) {
-														fullToolCalls[index].id = deltaToolCall.id;
-													}
-													if (deltaToolCall.type) {
-														fullToolCalls[index].type = deltaToolCall.type;
-													}
-													if (deltaToolCall.function?.name) {
-														fullToolCalls[index].function.name =
-															deltaToolCall.function.name;
-													}
-													if (deltaToolCall.function?.arguments) {
-														fullToolCalls[index].function.arguments +=
-															deltaToolCall.function.arguments;
-													}
-												}
-											}
 										}
 
 										// Handle provider-specific finish reason extraction
@@ -2754,6 +2567,8 @@ chat.openapi(completions, async (c) => {
 					top_p,
 					frequency_penalty,
 					presence_penalty,
+					tools,
+					tool_choice,
 				);
 
 				await insertLog({
@@ -2762,7 +2577,6 @@ chat.openapi(completions, async (c) => {
 					responseSize: fullContent.length,
 					content: fullContent,
 					reasoningContent: fullReasoningContent || null,
-					toolCalls: fullToolCalls,
 					finishReason: finishReason,
 					promptTokens: calculatedPromptTokens?.toString() || null,
 					completionTokens: calculatedCompletionTokens?.toString() || null,
@@ -2780,6 +2594,8 @@ chat.openapi(completions, async (c) => {
 					cost: costs.totalCost,
 					estimatedCost: costs.estimatedCost,
 					cached: false,
+					tools,
+					toolChoice: tool_choice,
 				});
 
 				// Save streaming cache if enabled and not canceled
@@ -2863,6 +2679,8 @@ chat.openapi(completions, async (c) => {
 			top_p,
 			frequency_penalty,
 			presence_penalty,
+			tools,
+			tool_choice,
 		);
 
 		await insertLog({
@@ -2924,6 +2742,8 @@ chat.openapi(completions, async (c) => {
 			top_p,
 			frequency_penalty,
 			presence_penalty,
+			tools,
+			tool_choice,
 		);
 
 		await insertLog({
@@ -3030,6 +2850,8 @@ chat.openapi(completions, async (c) => {
 		top_p,
 		frequency_penalty,
 		presence_penalty,
+		tools,
+		tool_choice,
 	);
 
 	await insertLog({
@@ -3038,7 +2860,6 @@ chat.openapi(completions, async (c) => {
 		responseSize: responseText.length,
 		content: content,
 		reasoningContent: reasoningContent,
-		toolCalls: toolCalls,
 		finishReason: finishReason,
 		promptTokens: calculatedPromptTokens?.toString() || null,
 		completionTokens: calculatedCompletionTokens?.toString() || null,
@@ -3060,6 +2881,8 @@ chat.openapi(completions, async (c) => {
 		cost: costs.totalCost,
 		estimatedCost: costs.estimatedCost,
 		cached: false,
+		tools,
+		toolChoice: tool_choice,
 	});
 
 	// Transform response to OpenAI format for non-OpenAI providers
