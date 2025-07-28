@@ -1834,6 +1834,7 @@ chat.openapi(completions, async (c) => {
 		return streamSSE(c, async (stream) => {
 			let eventId = 0;
 			let canceled = false;
+			let streamingError: unknown = null;
 
 			// Streaming cache variables
 			const streamingChunks: Array<{
@@ -2157,6 +2158,7 @@ chat.openapi(completions, async (c) => {
 								try {
 									data = JSON.parse(line.substring(6));
 								} catch (e) {
+									streamingError = e;
 									console.warn("Failed to parse streaming JSON:", {
 										error: e instanceof Error ? e.message : String(e),
 										lineContent: line, // First 100 chars for debugging
@@ -2323,6 +2325,32 @@ chat.openapi(completions, async (c) => {
 					canceled = true;
 				} else {
 					console.error("Error reading stream:", error);
+
+					// Forward the error to the client
+					try {
+						await stream.writeSSE({
+							event: "error",
+							data: JSON.stringify({
+								error: {
+									message: `Streaming error: ${error instanceof Error ? error.message : String(error)}`,
+									type: "gateway_error",
+									param: null,
+									code: "streaming_error",
+								},
+							}),
+							id: String(eventId++),
+						});
+						await stream.writeSSE({
+							event: "done",
+							data: "[DONE]",
+							id: String(eventId++),
+						});
+					} catch (sseError) {
+						console.error("Failed to send error SSE:", sseError);
+					}
+
+					// Mark as having an error for logging
+					streamingError = error;
 				}
 			} finally {
 				// Clean up the event listeners
@@ -2481,8 +2509,17 @@ chat.openapi(completions, async (c) => {
 					totalTokens: calculatedTotalTokens?.toString() || null,
 					reasoningTokens: reasoningTokens,
 					cachedTokens: cachedTokens?.toString() || null,
-					hasError: false,
-					errorDetails: null,
+					hasError: streamingError !== null,
+					errorDetails: streamingError
+						? {
+								statusCode: 500,
+								statusText: "Streaming Error",
+								responseText:
+									streamingError instanceof Error
+										? streamingError.message
+										: String(streamingError),
+							}
+						: null,
 					streamed: true,
 					canceled: canceled,
 					inputCost: costs.inputCost,
