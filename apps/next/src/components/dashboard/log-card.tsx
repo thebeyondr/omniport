@@ -386,7 +386,6 @@ export function LogCard({ log }: { log: Partial<Log> }) {
 							</div>
 						</div>
 					)}
-					`
 				</div>
 			)}
 		</div>
