@@ -1,4 +1,4 @@
-import { formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import {
 	AlertCircle,
 	AudioWaveform,
@@ -9,6 +9,7 @@ import {
 	Clock,
 	Coins,
 	Package,
+	Link as LinkIcon,
 	Zap,
 } from "lucide-react";
 import prettyBytes from "pretty-bytes";
@@ -102,6 +103,12 @@ export function LogCard({ log }: { log: Partial<Log> }) {
 								{log.cost ? `$${log.cost.toFixed(6)}` : log.cached ? "$0" : "?"}
 							</span>
 						</div>
+						{log.source && (
+							<div className="flex items-center gap-1">
+								<LinkIcon className="h-3.5 w-3.5" />
+								<span>{log.source}</span>
+							</div>
+						)}
 						<span className="ml-auto">{formattedTime}</span>
 					</div>
 				</div>
@@ -225,7 +232,7 @@ export function LogCard({ log }: { log: Partial<Log> }) {
 								</div>
 								<div className="text-muted-foreground">Request Cost</div>
 								<div>
-									{log.requestCost ? `$${log.requestCost.toFixed(6)}` : "?"}
+									{log.requestCost ? `$${log.requestCost.toFixed(6)}` : "0"}
 								</div>
 								<div className="text-muted-foreground">Total Cost</div>
 								<div className="font-medium">
@@ -236,6 +243,12 @@ export function LogCard({ log }: { log: Partial<Log> }) {
 						<div className="space-y-2">
 							<h4 className="text-sm font-medium">Metadata</h4>
 							<div className="grid grid-cols-2 gap-2 rounded-md border p-3 text-sm">
+								<div className="text-muted-foreground">Date</div>
+								<div className="font-mono text-xs">
+									{format(log.createdAt!, "dd.MM.yyyy HH:mm:ss")}
+								</div>
+								<div className="text-muted-foreground">Source</div>
+								<div className="font-mono text-xs">{log.source || "-"}</div>
 								<div className="text-muted-foreground">Project ID</div>
 								<div className="font-mono text-xs">{log.projectId}</div>
 								<div className="text-muted-foreground">Organization ID</div>

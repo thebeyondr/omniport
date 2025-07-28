@@ -64,6 +64,36 @@ function getFinishReasonForError(statusCode: number): string {
 }
 
 /**
+ * Validates and normalizes the x-source header
+ * Strips http(s):// and www. if present
+ * Validates allowed characters: a-zA-Z0-9, -, .
+ */
+function validateAndNormalizeSource(
+	source: string | undefined,
+): string | undefined {
+	if (!source) {
+		return undefined;
+	}
+
+	// Strip http:// or https:// if present
+	let normalized = source.replace(/^https?:\/\//, "");
+
+	// Strip www. if present
+	normalized = normalized.replace(/^www\./, "");
+
+	// Validate allowed characters: a-zA-Z0-9, -, .
+	const allowedPattern = /^[a-zA-Z0-9.-]+$/;
+	if (!allowedPattern.test(normalized)) {
+		throw new HTTPException(400, {
+			message:
+				"Invalid x-source header: only alphanumeric characters, hyphens, and dots are allowed",
+		});
+	}
+
+	return normalized;
+}
+
+/**
  * Creates a partial log entry with common fields to reduce duplication
  */
 function createLogEntry(
@@ -83,6 +113,7 @@ function createLogEntry(
 	presence_penalty: number | undefined,
 	tools: any[] | undefined,
 	toolChoice: any | undefined,
+	source: string | undefined,
 ) {
 	return {
 		requestId,
@@ -103,6 +134,7 @@ function createLogEntry(
 		tools: tools || null,
 		toolChoice: toolChoice || null,
 		mode: project.mode,
+		source: source || null,
 	} as const;
 }
 
@@ -1041,6 +1073,9 @@ chat.openapi(completions, async (c) => {
 	// Extract or generate request ID
 	const requestId = c.req.header("x-request-id") || shortid(40);
 
+	// Extract and validate source from x-source header
+	const source = validateAndNormalizeSource(c.req.header("x-source"));
+
 	c.header("x-request-id", requestId);
 
 	let requestedModel: Model = modelInput as Model;
@@ -1670,6 +1705,7 @@ chat.openapi(completions, async (c) => {
 					presence_penalty,
 					tools,
 					tool_choice,
+					source,
 				);
 
 				await insertLog({
@@ -1746,6 +1782,7 @@ chat.openapi(completions, async (c) => {
 					presence_penalty,
 					tools,
 					tool_choice,
+					source,
 				);
 
 				await insertLog({
@@ -1912,6 +1949,7 @@ chat.openapi(completions, async (c) => {
 						presence_penalty,
 						tools,
 						tool_choice,
+						source,
 					);
 
 					await insertLog({
@@ -1997,6 +2035,7 @@ chat.openapi(completions, async (c) => {
 					presence_penalty,
 					tools,
 					tool_choice,
+					source,
 				);
 
 				await insertLog({
@@ -2647,6 +2686,7 @@ chat.openapi(completions, async (c) => {
 					presence_penalty,
 					tools,
 					tool_choice,
+					source,
 				);
 
 				await insertLog({
@@ -2768,6 +2808,7 @@ chat.openapi(completions, async (c) => {
 			presence_penalty,
 			tools,
 			tool_choice,
+			source,
 		);
 
 		await insertLog({
@@ -2831,6 +2872,7 @@ chat.openapi(completions, async (c) => {
 			presence_penalty,
 			tools,
 			tool_choice,
+			source,
 		);
 
 		await insertLog({
@@ -2939,6 +2981,7 @@ chat.openapi(completions, async (c) => {
 		presence_penalty,
 		tools,
 		tool_choice,
+		source,
 	);
 
 	await insertLog({
