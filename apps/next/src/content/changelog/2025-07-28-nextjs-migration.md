@@ -13,7 +13,7 @@ image:
 
 ## 🚀 Next.js Migration
 
-**We migrated from TanStack Start to Next.js — here’s why**
+**We migrated from TanStack Start (older version - alpha) to Next.js — here’s why**
 
 After building on TanStack Start for a while, we made the leap to **Next.js** — and the results speak for themselves.
 
@@ -38,7 +38,7 @@ We went from solid to stellar:
 
 **Better SEO and performance** out of the box with Next.js’ built-in optimizations
 
-**Simpler mental model** for routing, layouts, and deployment
+**Simpler mental model** for routing, layouts, and deployment (yes for real)
 
 **Edge-ready** and more compatible with our future plans (middleware, streaming, etc.)
 
