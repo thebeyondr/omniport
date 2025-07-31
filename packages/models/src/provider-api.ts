@@ -27,6 +27,7 @@ export function getProviderHeaders(
 		case "novita":
 		case "moonshot":
 		case "alibaba":
+		case "nebius":
 		case "custom":
 		default:
 			return {
@@ -77,6 +78,7 @@ export function prepareRequestBody(
 		case "novita":
 		case "moonshot":
 		case "alibaba":
+		case "nebius":
 		case "custom": {
 			if (stream) {
 				requestBody.stream_options = {
@@ -295,6 +297,9 @@ export function getProviderEndpoint(
 			case "alibaba":
 				url = "https://dashscope-intl.aliyuncs.com/compatible-mode";
 				break;
+			case "nebius":
+				url = "https://api.studio.nebius.com";
+				break;
 			case "custom":
 				if (!baseUrl) {
 					throw new Error(`Custom provider requires a baseUrl`);
@@ -348,6 +353,7 @@ export function getProviderEndpoint(
 		case "deepseek":
 		case "moonshot":
 		case "alibaba":
+		case "nebius":
 		case "custom":
 		default:
 			return `${url}/v1/chat/completions`;
@@ -458,6 +464,8 @@ export async function validateProviderKey(
 		const messages = [systemMessage, minimalMessage];
 
 		const validationModel = getCheapestModelForProvider(provider);
+
+		console.log("using validationModel", provider, validationModel);
 
 		if (!validationModel) {
 			throw new Error(
