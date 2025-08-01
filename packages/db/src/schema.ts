@@ -11,7 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { customAlphabet } from "nanoid";
 
-import type { errorDetails } from "./types";
+import type { errorDetails, tools, toolChoice, toolResults } from "./types";
 import type z from "zod";
 
 export const UnifiedFinishReason = {
@@ -262,9 +262,9 @@ export const log = pgTable("log", {
 	responseSize: integer().notNull(),
 	content: text(),
 	reasoningContent: text(),
-	tools: json(),
-	toolChoice: json(),
-	toolResults: json(),
+	tools: json().$type<z.infer<typeof tools>>(),
+	toolChoice: json().$type<z.infer<typeof toolChoice>>(),
+	toolResults: json().$type<z.infer<typeof toolResults>>(),
 	finishReason: text(),
 	unifiedFinishReason: text(),
 	promptTokens: decimal(),
