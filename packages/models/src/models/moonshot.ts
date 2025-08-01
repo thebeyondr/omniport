@@ -44,6 +44,7 @@ export const moonshotModels = [
 				streaming: true,
 				vision: false,
 				tools: true,
+				test: "skip",
 			},
 		],
 		jsonOutput: true,
