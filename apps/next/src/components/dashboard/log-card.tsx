@@ -366,7 +366,6 @@ export function LogCard({ log }: { log: Partial<Log> }) {
 															<div className="flex justify-between">
 																<span className="font-medium">
 																	{toolCall.function?.name ||
-																		toolCall.name ||
 																		"Unknown Function"}
 																</span>
 																<span className="text-muted-foreground">

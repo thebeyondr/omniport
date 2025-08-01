@@ -523,8 +523,42 @@ export interface paths {
 								topP: number | null;
 								frequencyPenalty: number | null;
 								presencePenalty: number | null;
-								tools?: unknown;
-								toolChoice?: unknown;
+								tools:
+									| {
+											/** @enum {string} */
+											type: "function";
+											function: {
+												name: string;
+												description?: string;
+												parameters?: {
+													[key: string]: unknown;
+												};
+											};
+									  }[]
+									| null;
+								toolChoice:
+									| "none"
+									| "auto"
+									| "required"
+									| {
+											/** @enum {string} */
+											type: "function";
+											function: {
+												name: string;
+											};
+									  }
+									| unknown;
+								toolResults:
+									| {
+											id: string;
+											/** @enum {string} */
+											type: "function";
+											function: {
+												name: string;
+												arguments: string;
+											};
+									  }[]
+									| null;
 								hasError: boolean | null;
 								errorDetails: {
 									statusCode: number;

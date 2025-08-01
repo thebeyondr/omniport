@@ -331,10 +331,7 @@ export function RecentLogs({ initialData, projectId }: RecentLogsProps) {
 										...log,
 										createdAt: new Date(log.createdAt),
 										updatedAt: new Date(log.updatedAt),
-										messages: log.messages,
-										tools: log.tools,
-										toolChoice: log.toolChoice,
-										errorDetails: log.errorDetails,
+										toolChoice: log.toolChoice as any, // somehow toolChoice is unknown
 									}}
 								/>
 							))}
