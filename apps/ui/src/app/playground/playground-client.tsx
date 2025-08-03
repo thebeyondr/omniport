@@ -1,6 +1,8 @@
 "use client";
 
 import { getModelStreamingSupport } from "@llmgateway/models";
+import { useQueryClient } from "@tanstack/react-query";
+import { Info } from "lucide-react";
 import { useState, useEffect } from "react";
 
 import { ApiKeyManager } from "@/components/playground/api-key-manager";
@@ -16,6 +18,7 @@ import {
 	useChats,
 } from "@/hooks/useChats";
 import { useUser } from "@/hooks/useUser";
+import { Alert, AlertDescription } from "@/lib/components/alert";
 import { SidebarProvider } from "@/lib/components/sidebar";
 import { useAppConfig } from "@/lib/config";
 import { useApi } from "@/lib/fetch-client";
@@ -33,6 +36,7 @@ export function PlaygroundClient() {
 	const { userApiKey, isLoaded: isApiKeyLoaded } = useApiKey();
 	const [selectedModel, setSelectedModel] = useState("gpt-4o-mini");
 	const api = useApi();
+	const queryClient = useQueryClient();
 
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
@@ -42,7 +46,7 @@ export function PlaygroundClient() {
 	// Chat API hooks
 	const createChat = useCreateChat();
 	const addMessage = useAddMessage();
-	const { data: currentChatData } = useChat(currentChatId || "");
+	const { data: currentChatData } = useChat(currentChatId ?? "");
 	useChats();
 	const { data: subscriptionStatus, isLoading: isSubscriptionLoading } =
 		api.useQuery("get", "/subscriptions/status", {});
@@ -71,6 +75,9 @@ export function PlaygroundClient() {
 				timestamp: new Date(msg.createdAt),
 			}));
 			setMessages(chatMessages);
+		} else if (currentChatData !== undefined) {
+			// Chat exists but has no messages, clear the message state
+			setMessages([]);
 		}
 	}, [currentChatData]);
 
@@ -205,6 +212,7 @@ export function PlaygroundClient() {
 
 				const reader = response.body?.getReader();
 				const decoder = new TextDecoder();
+				let fullContent = "";
 
 				if (reader) {
 					let buffer = "";
@@ -230,6 +238,7 @@ export function PlaygroundClient() {
 										const parsed = JSON.parse(data);
 										const delta = parsed.choices?.[0]?.delta?.content;
 										if (delta) {
+											fullContent += delta;
 											setMessages((prev) =>
 												prev.map((msg) =>
 													msg.id === assistantMessage.id
@@ -248,10 +257,48 @@ export function PlaygroundClient() {
 						reader.releaseLock();
 					}
 				}
+
+				// Save the complete assistant response to database
+				if (fullContent && chatId) {
+					try {
+						await addMessage.mutateAsync({
+							params: {
+								path: { id: chatId },
+							},
+							body: { role: "assistant", content: fullContent },
+						});
+						// Invalidate the chat query to refresh the data
+						const queryKey = api.queryOptions("get", "/chats/{id}", {
+							params: { path: { id: chatId } },
+						}).queryKey;
+						queryClient.invalidateQueries({ queryKey });
+					} catch (error) {
+						console.error("Failed to save assistant message:", error);
+					}
+				}
 			} else {
 				const data = await response.json();
 				const assistantContent = data.choices?.[0]?.message?.content || "";
 				addLocalMessage({ role: "assistant", content: assistantContent });
+
+				// Save the assistant response to database
+				if (assistantContent && chatId) {
+					try {
+						await addMessage.mutateAsync({
+							params: {
+								path: { id: chatId },
+							},
+							body: { role: "assistant", content: assistantContent },
+						});
+						// Invalidate the chat query to refresh the data
+						const queryKey = api.queryOptions("get", "/chats/{id}", {
+							params: { path: { id: chatId } },
+						}).queryKey;
+						queryClient.invalidateQueries({ queryKey });
+					} catch (error) {
+						console.error("Failed to save assistant message:", error);
+					}
+				}
 			}
 
 			setError(null);
@@ -280,6 +327,8 @@ export function PlaygroundClient() {
 	const handleChatSelect = (chatId: string) => {
 		setCurrentChatId(chatId);
 		setError(null);
+		// Clear messages immediately to avoid showing stale data while loading
+		setMessages([]);
 	};
 
 	return (
@@ -298,7 +347,15 @@ export function PlaygroundClient() {
 						onModelSelect={handleModelSelect}
 						onManageApiKey={() => setShowApiKeyManager(true)}
 					/>
-					<div className="flex-1 overflow-hidden max-w-2xl mx-auto">
+					<div className="max-w-2xl mx-auto px-4 pt-4">
+						<Alert className="bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800">
+							<Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+							<AlertDescription className="text-blue-800 dark:text-blue-200">
+								We're revamping the playground. Stay tuned for V2!
+							</AlertDescription>
+						</Alert>
+					</div>
+					<div className="flex-1 max-w-2xl mx-auto">
 						<ChatUi
 							messages={messages}
 							onSendMessage={handleSendMessage}
@@ -314,6 +371,7 @@ export function PlaygroundClient() {
 			<ApiKeyManager
 				open={showApiKeyManager}
 				onOpenChange={setShowApiKeyManager}
+				selectedModel={selectedModel}
 			/>
 		</SidebarProvider>
 	);
