@@ -1095,7 +1095,42 @@ export interface paths {
 			path?: never;
 			cookie?: never;
 		};
-		get?: never;
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Project retrieved successfully. */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							project: {
+								id: string;
+								createdAt: string;
+								updatedAt: string;
+								name: string;
+								organizationId: string;
+								cachingEnabled: boolean;
+								cacheDurationSeconds: number;
+								/** @enum {string} */
+								mode: "api-keys" | "credits" | "hybrid";
+								/** @enum {string|null} */
+								status: "active" | "inactive" | "deleted" | null;
+							};
+						};
+					};
+				};
+			};
+		};
 		put?: never;
 		post?: never;
 		delete: {

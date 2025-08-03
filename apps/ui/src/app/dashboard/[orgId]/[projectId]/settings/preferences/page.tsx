@@ -1,5 +1,9 @@
-import { CachingSettings } from "@/components/settings/caching-settings";
-import { ProjectModeSettings } from "@/components/settings/project-mode-settings";
+import { Suspense } from "react";
+
+import { CachingSettingsRsc } from "./_components/caching-settings-rsc";
+import { ProjectModeSettingsRsc } from "./_components/project-mode-settings-rsc";
+import { CachingSettingsSkeleton } from "./_skeletons/caching-settings-skeleton";
+import { ProjectModeSkeleton } from "./_skeletons/project-mode-skeleton";
 import {
 	Card,
 	CardContent,
@@ -8,7 +12,13 @@ import {
 	CardTitle,
 } from "@/lib/components/card";
 
-export default function PreferencesPage() {
+export default async function PreferencesPage({
+	params,
+}: {
+	params: Promise<{ orgId: string; projectId: string }>;
+}) {
+	const { orgId, projectId } = await params;
+
 	return (
 		<div className="flex flex-col">
 			<div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
@@ -24,7 +34,9 @@ export default function PreferencesPage() {
 							</CardDescription>
 						</CardHeader>
 						<CardContent>
-							<ProjectModeSettings />
+							<Suspense fallback={<ProjectModeSkeleton />}>
+								<ProjectModeSettingsRsc orgId={orgId} projectId={projectId} />
+							</Suspense>
 						</CardContent>
 					</Card>
 
@@ -36,7 +48,9 @@ export default function PreferencesPage() {
 							</CardDescription>
 						</CardHeader>
 						<CardContent>
-							<CachingSettings />
+							<Suspense fallback={<CachingSettingsSkeleton />}>
+								<CachingSettingsRsc orgId={orgId} projectId={projectId} />
+							</Suspense>
 						</CardContent>
 					</Card>
 				</div>
