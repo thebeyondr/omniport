@@ -68,6 +68,7 @@ export const auth: ReturnType<typeof betterAuth> = betterAuth({
 		defaultCookieAttributes: {
 			domain: cookieDomain,
 		},
+		cookiePrefix: "llmgtwy",
 	},
 	session: {
 		expiresIn: 60 * 60 * 24 * 30, // 30 days
