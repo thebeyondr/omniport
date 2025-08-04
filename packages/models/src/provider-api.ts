@@ -54,6 +54,7 @@ export function prepareRequestBody(
 	tools?: any[],
 	tool_choice?: string | { type: string; function: { name: string } },
 	reasoning_effort?: "low" | "medium" | "high",
+	supportsReasoning?: boolean,
 ) {
 	const requestBody: any = {
 		model: usedModel,
@@ -167,7 +168,7 @@ export function prepareRequestBody(
 									text: i.text,
 								};
 							}
-							throw new Error("No support for non-text parts yet");
+							throw new Error(`Not supported content type yet: ${i.type}`);
 						})
 					: [
 							{
@@ -187,6 +188,13 @@ export function prepareRequestBody(
 			}
 			if (top_p !== undefined) {
 				requestBody.generationConfig.topP = top_p;
+			}
+
+			// Enable thinking/reasoning content exposure for Google models that support reasoning
+			if (supportsReasoning) {
+				requestBody.generationConfig.thinkingConfig = {
+					includeThoughts: true,
+				};
 			}
 
 			break;
@@ -494,6 +502,7 @@ export async function validateProviderKey(
 			undefined, // tools
 			undefined, // tool_choice
 			undefined, // reasoning_effort
+			false, // supportsReasoning - disable for validation
 		);
 
 		const headers = getProviderHeaders(provider, token);
