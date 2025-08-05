@@ -368,7 +368,9 @@ function estimateTokens(
 				).length;
 			} catch (error) {
 				// Fallback to simple estimation if encoding fails
-				console.error(`Failed to encode chat messages: ${error}`);
+				console.error(
+					`Failed to encode chat messages in estimate tokens: ${error}`,
+				);
 				calculatedPromptTokens =
 					messages.reduce((acc, m) => acc + (m.content?.length || 0), 0) / 4;
 			}
