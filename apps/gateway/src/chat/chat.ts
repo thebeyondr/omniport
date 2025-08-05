@@ -359,7 +359,10 @@ function estimateTokens(
 				// Convert messages to the format expected by gpt-tokenizer
 				const chatMessages: ChatMessage[] = messages.map((m) => ({
 					role: m.role,
-					content: m.content || "",
+					content:
+						typeof m.content === "string"
+							? m.content
+							: JSON.stringify(m.content),
 					name: m.name,
 				}));
 				calculatedPromptTokens = encodeChat(
