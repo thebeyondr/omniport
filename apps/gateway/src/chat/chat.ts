@@ -1681,6 +1681,27 @@ chat.openapi(completions, async (c) => {
 	}
 
 	if (project.mode === "api-keys") {
+		// Check if pro plan is required for API keys mode in hosted environment
+		const isHosted = process.env.HOSTED === "true";
+		const isPaidMode = process.env.PAID_MODE === "true";
+
+		if (isHosted && isPaidMode) {
+			const organization = await getOrganization(project.organizationId);
+
+			if (!organization) {
+				throw new HTTPException(500, {
+					message: "Could not find organization",
+				});
+			}
+
+			if (organization.plan !== "pro") {
+				throw new HTTPException(402, {
+					message:
+						"API Keys mode requires a Pro plan. Please upgrade to Pro or switch to Credits mode.",
+				});
+			}
+		}
+
 		// Get the provider key from the database using cached helper function
 		if (usedProvider === "custom" && customProviderName) {
 			providerKey = await getCustomProviderKey(
@@ -1731,9 +1752,30 @@ chat.openapi(completions, async (c) => {
 		}
 
 		if (providerKey) {
+			// Check if pro plan is required when using API keys in hybrid mode in hosted environment
+			const isHosted = process.env.HOSTED === "true";
+			const isPaidMode = process.env.PAID_MODE === "true";
+
+			if (isHosted && isPaidMode) {
+				const organization = await getOrganization(project.organizationId);
+
+				if (!organization) {
+					throw new HTTPException(500, {
+						message: "Could not find organization",
+					});
+				}
+
+				if (organization.plan !== "pro") {
+					throw new HTTPException(402, {
+						message:
+							"Hybrid mode with API keys requires a Pro plan. Please upgrade to Pro or switch to Credits mode.",
+					});
+				}
+			}
+
 			usedToken = providerKey.token;
 		} else {
-			// Check if the organization has enough credits
+			// No API key available, fall back to credits - no pro plan required
 			const organization = await getOrganization(project.organizationId);
 
 			if (!organization) {
