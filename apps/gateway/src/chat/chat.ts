@@ -659,7 +659,9 @@ function transformToOpenAIFormat(
 						finish_reason:
 							finishReason === "end_turn"
 								? "stop"
-								: finishReason?.toLowerCase() || "stop",
+								: finishReason === "tool_use"
+									? "tool_calls"
+									: finishReason?.toLowerCase() || "stop",
 					},
 				],
 				usage: {
