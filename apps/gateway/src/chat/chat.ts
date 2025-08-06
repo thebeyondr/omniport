@@ -1483,6 +1483,12 @@ chat.openapi(completions, async (c) => {
 		});
 	}
 
+	if (apiKey.usageLimit && Number(apiKey.usage) >= Number(apiKey.usageLimit)) {
+		throw new HTTPException(401, {
+			message: "Unauthorized: LLMGateway API key reached its usage limit.",
+		});
+	}
+
 	// Get the project to determine mode for routing decisions
 	const project = await getProject(apiKey.projectId);
 

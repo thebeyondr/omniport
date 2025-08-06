@@ -210,6 +210,8 @@ export const apiKey = pgTable("api_key", {
 	status: text({
 		enum: ["active", "inactive", "deleted"],
 	}).default("active"),
+	usageLimit: decimal(),
+	usage: decimal().notNull().default("0"),
 	projectId: text()
 		.notNull()
 		.references(() => project.id, { onDelete: "cascade" }),
