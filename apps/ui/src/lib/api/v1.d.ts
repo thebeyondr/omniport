@@ -478,6 +478,8 @@ export interface paths {
 					cursor?: string;
 					orderBy?: "createdAt_asc" | "createdAt_desc";
 					limit?: string;
+					customHeaderKey?: string;
+					customHeaderValue?: string;
 				};
 				header?: never;
 				path?: never;
@@ -573,6 +575,7 @@ export interface paths {
 								canceled: boolean | null;
 								streamed: boolean | null;
 								cached: boolean | null;
+								customHeaders?: unknown;
 								/** @enum {string} */
 								mode: "api-keys" | "credits" | "hybrid";
 								/** @enum {string} */

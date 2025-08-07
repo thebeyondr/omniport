@@ -299,6 +299,7 @@ export const log = pgTable("log", {
 		enum: ["api-keys", "credits"],
 	}).notNull(),
 	source: text(),
+	customHeaders: json().$type<{ [key: string]: string }>(),
 });
 
 export const passkey = pgTable("passkey", {
