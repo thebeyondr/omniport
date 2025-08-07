@@ -319,6 +319,12 @@ async function handlePaymentIntentSucceeded(
 	const paymentIntent = event.data.object;
 	const { metadata, amount } = paymentIntent;
 
+	// Get the credit amount (base amount without fees) from metadata
+	const creditAmount = parseFloat(paymentIntent.metadata.baseAmount);
+	if (!creditAmount) {
+		return;
+	}
+
 	const result = await resolveOrganizationFromStripeEvent({
 		metadata,
 		customer: paymentIntent.customer as string,
@@ -328,25 +334,10 @@ async function handlePaymentIntentSucceeded(
 		console.error("Could not resolve organization from payment intent");
 		return;
 	}
-
 	const { organizationId, organization } = result;
 
 	// Convert amount from cents to dollars
 	const totalAmountInDollars = amount / 100;
-
-	// Check if this is a subscription payment (pro plan payments don't have baseAmount)
-	if (metadata?.plan === "pro") {
-		console.log(
-			`Payment intent ${paymentIntent.id} is for pro subscription, skipping credit processing`,
-		);
-		return; // Pro subscription payments are handled by invoice.payment_succeeded webhook
-	}
-
-	// Get the credit amount (base amount without fees) from metadata
-	const creditAmount = parseFloat(paymentIntent.metadata.baseAmount);
-	if (!creditAmount) {
-		throw new Error("Credit amount not found in payment intent metadata");
-	}
 
 	// Update organization credits with credit amount only (fees are not added as credits)
 	await db
