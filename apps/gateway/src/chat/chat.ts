@@ -1893,6 +1893,11 @@ chat.openapi(completions, async (c) => {
 
 				for (const chunk of cachedStreamingResponse.chunks) {
 					try {
+						// Skip "[DONE]" markers as they are not JSON
+						if (chunk.data === "[DONE]") {
+							continue;
+						}
+
 						const chunkData = JSON.parse(chunk.data);
 
 						// Extract content from chunk
