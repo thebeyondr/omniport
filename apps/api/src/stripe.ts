@@ -519,7 +519,9 @@ async function handleSetupIntentSucceeded(
 	const organizationId = metadata?.organizationId;
 
 	if (!organizationId || !payment_method) {
-		console.error("Missing organizationId or payment_method in setupIntent");
+		console.error(
+			`Missing organizationId or payment_method in setupIntent: ${event.id} ${setupIntent.id}`,
+		);
 		return;
 	}
 
@@ -527,7 +529,7 @@ async function handleSetupIntentSucceeded(
 	try {
 		stripeCustomerId = await ensureStripeCustomer(organizationId);
 	} catch (error) {
-		console.error(`Error ensuring Stripe customer: ${error}`);
+		console.error(`Error ensuring Stripe customer: ${error} ${organizationId}`);
 		return;
 	}
 
