@@ -648,9 +648,12 @@ function transformToOpenAIFormat(
 					},
 				],
 				usage: {
-					prompt_tokens: promptTokens,
-					completion_tokens: completionTokens,
-					total_tokens: totalTokens,
+					prompt_tokens: Math.max(1, promptTokens || 1),
+					completion_tokens: completionTokens || 0,
+					total_tokens: Math.max(
+						1,
+						totalTokens || Math.max(1, promptTokens || 1),
+					),
 					...(reasoningTokens !== null && {
 						reasoning_tokens: reasoningTokens,
 					}),
@@ -689,9 +692,12 @@ function transformToOpenAIFormat(
 					},
 				],
 				usage: {
-					prompt_tokens: promptTokens,
-					completion_tokens: completionTokens,
-					total_tokens: totalTokens,
+					prompt_tokens: Math.max(1, promptTokens || 1),
+					completion_tokens: completionTokens || 0,
+					total_tokens: Math.max(
+						1,
+						totalTokens || Math.max(1, promptTokens || 1),
+					),
 					...(reasoningTokens !== null && {
 						reasoning_tokens: reasoningTokens,
 					}),
@@ -727,9 +733,12 @@ function transformToOpenAIFormat(
 						},
 					],
 					usage: {
-						prompt_tokens: promptTokens,
-						completion_tokens: completionTokens,
-						total_tokens: totalTokens,
+						prompt_tokens: Math.max(1, promptTokens || 1),
+						completion_tokens: completionTokens || 0,
+						total_tokens: Math.max(
+							1,
+							totalTokens || Math.max(1, promptTokens || 1),
+						),
 						...(reasoningTokens !== null && {
 							reasoning_tokens: reasoningTokens,
 						}),
@@ -746,10 +755,34 @@ function transformToOpenAIFormat(
 /**
  * Transforms streaming chunk to OpenAI format for non-OpenAI providers
  */
+// Helper function to calculate prompt tokens when missing or 0
+function calculatePromptTokensFromMessages(messages: any[]): number {
+	try {
+		const chatMessages: ChatMessage[] = messages.map((m: any) => ({
+			role: m.role,
+			content:
+				typeof m.content === "string" ? m.content : JSON.stringify(m.content),
+			name: m.name,
+		}));
+		return encodeChat(chatMessages, DEFAULT_TOKENIZER_MODEL).length;
+	} catch (_error) {
+		return Math.max(
+			1,
+			Math.round(
+				messages.reduce(
+					(acc: number, m: any) => acc + (m.content?.length || 0),
+					0,
+				) / 4,
+			),
+		);
+	}
+}
+
 function transformStreamingChunkToOpenAIFormat(
 	usedProvider: Provider,
 	usedModel: string,
 	data: any,
+	messages: any[],
 ): any {
 	let transformedData = data;
 
@@ -942,11 +975,16 @@ function transformStreamingChunkToOpenAIFormat(
 					],
 					usage: data.usageMetadata
 						? {
-								prompt_tokens: data.usageMetadata.promptTokenCount || 0,
+								prompt_tokens:
+									data.usageMetadata.promptTokenCount > 0
+										? data.usageMetadata.promptTokenCount
+										: calculatePromptTokensFromMessages(messages),
 								completion_tokens: data.usageMetadata.candidatesTokenCount || 0,
 								// Calculate total including reasoning tokens for Google models
 								total_tokens:
-									(data.usageMetadata.promptTokenCount || 0) +
+									(data.usageMetadata.promptTokenCount > 0
+										? data.usageMetadata.promptTokenCount
+										: calculatePromptTokensFromMessages(messages)) +
 									(data.usageMetadata.candidatesTokenCount || 0) +
 									(data.usageMetadata.thoughtsTokenCount || 0),
 								...(data.usageMetadata.thoughtsTokenCount && {
@@ -982,11 +1020,16 @@ function transformStreamingChunkToOpenAIFormat(
 					],
 					usage: data.usageMetadata
 						? {
-								prompt_tokens: data.usageMetadata.promptTokenCount || 0,
+								prompt_tokens:
+									data.usageMetadata.promptTokenCount > 0
+										? data.usageMetadata.promptTokenCount
+										: calculatePromptTokensFromMessages(messages),
 								completion_tokens: data.usageMetadata.candidatesTokenCount || 0,
 								// Calculate total including reasoning tokens for Google models
 								total_tokens:
-									(data.usageMetadata.promptTokenCount || 0) +
+									(data.usageMetadata.promptTokenCount > 0
+										? data.usageMetadata.promptTokenCount
+										: calculatePromptTokensFromMessages(messages)) +
 									(data.usageMetadata.candidatesTokenCount || 0) +
 									(data.usageMetadata.thoughtsTokenCount || 0),
 								...(data.usageMetadata.thoughtsTokenCount && {
@@ -2635,7 +2678,7 @@ chat.openapi(completions, async (c) => {
 							let finalTotalTokens = totalTokens;
 
 							// Estimate missing tokens if needed using helper function
-							if (finalPromptTokens === null) {
+							if (finalPromptTokens === null || finalPromptTokens === 0) {
 								const estimation = estimateTokens(
 									usedProvider,
 									messages,
@@ -2674,9 +2717,12 @@ chat.openapi(completions, async (c) => {
 										},
 									],
 									usage: {
-										prompt_tokens: finalPromptTokens || 0,
+										prompt_tokens: Math.max(1, finalPromptTokens || 1),
 										completion_tokens: finalCompletionTokens || 0,
-										total_tokens: finalTotalTokens || 0,
+										total_tokens: Math.max(
+											1,
+											finalTotalTokens || Math.max(1, finalPromptTokens || 1),
+										),
 									},
 								};
 
@@ -2724,6 +2770,7 @@ chat.openapi(completions, async (c) => {
 								usedProvider,
 								usedModel,
 								data,
+								messages,
 							);
 
 							// For Anthropic, if we have partial usage data, complete it
@@ -3018,14 +3065,26 @@ chat.openapi(completions, async (c) => {
 								},
 							],
 							usage: {
-								prompt_tokens: Math.round(
-									promptTokens || calculatedPromptTokens || 0,
+								prompt_tokens: Math.max(
+									1,
+									Math.round(
+										promptTokens && promptTokens > 0
+											? promptTokens
+											: calculatedPromptTokens || 1,
+									),
 								),
 								completion_tokens: Math.round(
 									completionTokens || calculatedCompletionTokens || 0,
 								),
 								total_tokens: Math.round(
-									totalTokens || calculatedTotalTokens || 0,
+									totalTokens ||
+										calculatedTotalTokens ||
+										Math.max(
+											1,
+											promptTokens && promptTokens > 0
+												? promptTokens
+												: calculatedPromptTokens || 1,
+										),
 								),
 								...(cachedTokens !== null && {
 									prompt_tokens_details: {
