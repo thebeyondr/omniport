@@ -23,6 +23,7 @@ export function ReferralStep({ onComplete }: ReferralStepProps) {
 
 	const referralSources = [
 		{ value: "twitter", label: "X (Formerly Twitter)" },
+		{ value: "email", label: "Email" },
 		{ value: "reddit", label: "Reddit" },
 		{ value: "producthunt", label: "ProductHunt" },
 		{ value: "devntell", label: "DevNTell podcast" },
