@@ -39,8 +39,8 @@ We're thrilled to launch our comprehensive **Models Directory** and announce an 
 
 - **Provider**: CloudRift
 - **Cost**: $0.00 input/output tokens
-- **Context Window**: 131,072 tokens
-- **Capabilities**: Streaming, Tools, JSON output
+- **Context Window**: 16,380 tokens
+- **Capabilities**: Streaming
 - **Model ID**: `llama-3.1-70b-instruct-free`
 - **Family**: Meta Llama
 
@@ -51,16 +51,6 @@ We're thrilled to launch our comprehensive **Models Directory** and announce an 
 **Start Using Free Llama**: The free Llama 3.1 70B model is immediately available through our API - no additional setup required.
 
 **API Integration**: Use the model with identifier `llama-3.1-70b-instruct-free` in your API calls to access the free tier.
-
-## 💡 Perfect For
-
-**Development & Testing**: Build and test AI applications without worrying about costs during development.
-
-**Educational Projects**: Learn and experiment with state-of-the-art language models at no cost.
-
-**Production Workloads**: Deploy lightweight production applications with reliable, free access to a powerful 70B parameter model.
-
-**Research & Experimentation**: Explore advanced AI capabilities without budget constraints.
 
 ---
 
