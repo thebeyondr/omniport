@@ -63,7 +63,6 @@ chat.openapi(completionRoute, async (c) => {
 					messages,
 					stream,
 					temperature: 0.7,
-					max_tokens: 2048,
 				}),
 			},
 		);
