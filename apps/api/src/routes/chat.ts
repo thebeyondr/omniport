@@ -62,7 +62,6 @@ chat.openapi(completionRoute, async (c) => {
 					model,
 					messages,
 					stream,
-					temperature: 0.7,
 				}),
 			},
 		);
