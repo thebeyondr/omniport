@@ -5,7 +5,7 @@ echo "Starting LLMGateway unified container..."
 
 # Create node user if it doesn't exist
 if ! id "node" &>/dev/null; then
-    adduser -D -s /bin/sh node
+    adduser --system --shell /bin/sh --no-create-home node
 fi
 
 # Create log directories and files with proper permissions
@@ -19,31 +19,31 @@ if [ ! -s "/var/lib/postgresql/data/PG_VERSION" ]; then
     echo "Initializing PostgreSQL database..."
 
     # Initialize database
-    su postgres -c "initdb -D /var/lib/postgresql/data"
+    su postgres -c "/usr/lib/postgresql/17/bin/initdb -D /var/lib/postgresql/data"
 
     # Start PostgreSQL temporarily for setup
-    su postgres -c "pg_ctl -D /var/lib/postgresql/data -l /var/log/postgresql.log start"
+    su postgres -c "/usr/lib/postgresql/17/bin/pg_ctl -D /var/lib/postgresql/data -l /var/log/postgresql.log start"
 
     # Wait for PostgreSQL to start
     sleep 5
 
     # Create database and user
-    su postgres -c "createdb $POSTGRES_DB" || true
-    su postgres -c "psql -c \"ALTER USER postgres PASSWORD '$POSTGRES_PASSWORD';\"" || true
+    su postgres -c "/usr/lib/postgresql/17/bin/createdb $POSTGRES_DB" || true
+    su postgres -c "/usr/lib/postgresql/17/bin/psql -c \"ALTER USER postgres PASSWORD '$POSTGRES_PASSWORD';\"" || true
 
     # Run initialization scripts if they exist
     if [ -d "/docker-entrypoint-initdb.d" ]; then
         for f in /docker-entrypoint-initdb.d/*; do
             case "$f" in
-                *.sql)    echo "Running $f"; su postgres -c "psql -d $POSTGRES_DB -f $f"; echo ;;
-                *.sql.gz) echo "Running $f"; gunzip -c "$f" | su postgres -c "psql -d $POSTGRES_DB"; echo ;;
+                *.sql)    echo "Running $f"; su postgres -c "/usr/lib/postgresql/17/bin/psql -d $POSTGRES_DB -f $f"; echo ;;
+                *.sql.gz) echo "Running $f"; gunzip -c "$f" | su postgres -c "/usr/lib/postgresql/17/bin/psql -d $POSTGRES_DB"; echo ;;
                 *)        echo "Ignoring $f" ;;
             esac
         done
     fi
 
     # Stop PostgreSQL
-    su postgres -c "pg_ctl -D /var/lib/postgresql/data stop"
+    su postgres -c "/usr/lib/postgresql/17/bin/pg_ctl -D /var/lib/postgresql/data stop"
 
     echo "PostgreSQL initialization complete."
 else
@@ -53,7 +53,7 @@ fi
 # Set proper ownership
 chown -R postgres:postgres /var/lib/postgresql
 chown -R redis:redis /var/lib/redis
-chown -R node:node /app/services
+chown -R node:nogroup /app/services
 
 # Create log directories
 mkdir -p /var/log/supervisor
