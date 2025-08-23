@@ -31,7 +31,6 @@ const UnifiedFinishReason = {
 	CANCELED: "canceled",
 	UNKNOWN: "unknown",
 } as const;
-const FINISH_REASONS = ["stop", "length", "error", "content_filter"];
 
 interface RecentLogsProps {
 	initialData?:
@@ -54,9 +53,6 @@ export function RecentLogs({ initialData, projectId }: RecentLogsProps) {
 
 	// Initialize state from URL parameters
 	const [dateRange, setDateRange] = useState<DateRange | undefined>();
-	const [finishReason, setFinishReason] = useState<string | undefined>(
-		searchParams.get("finishReason") || undefined,
-	);
 	const [unifiedFinishReason, setUnifiedFinishReason] = useState<
 		string | undefined
 	>(searchParams.get("unifiedFinishReason") || undefined);
@@ -148,9 +144,6 @@ export function RecentLogs({ initialData, projectId }: RecentLogsProps) {
 	if (dateRange?.end) {
 		queryParams.endDate = dateRange.end.toISOString();
 	}
-	if (finishReason && finishReason !== "all") {
-		queryParams.finishReason = finishReason;
-	}
 	if (unifiedFinishReason && unifiedFinishReason !== "all") {
 		queryParams.unifiedFinishReason = unifiedFinishReason;
 	}
@@ -172,7 +165,6 @@ export function RecentLogs({ initialData, projectId }: RecentLogsProps) {
 
 	const shouldUseInitialData =
 		!dateRange && // No date range selected (date range is not in URL initially)
-		finishReason === (searchParams.get("finishReason") || undefined) &&
 		unifiedFinishReason ===
 			(searchParams.get("unifiedFinishReason") || undefined) &&
 		provider === (searchParams.get("provider") || undefined) &&
@@ -259,23 +251,6 @@ export function RecentLogs({ initialData, projectId }: RecentLogsProps) {
 				<DateRangeSelect onChange={handleDateRangeChange} />
 
 				<Select
-					onValueChange={handleFilterChange("finishReason", setFinishReason)}
-					value={finishReason || "all"}
-				>
-					<SelectTrigger className="w-[180px]">
-						<SelectValue placeholder="Filter by reason" />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectItem value="all">All reasons</SelectItem>
-						{FINISH_REASONS.map((reason) => (
-							<SelectItem key={reason} value={reason}>
-								{reason}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
-
-				<Select
 					onValueChange={handleFilterChange(
 						"unifiedFinishReason",
 						setUnifiedFinishReason,
@@ -333,7 +308,7 @@ export function RecentLogs({ initialData, projectId }: RecentLogsProps) {
 				</Select>
 
 				<Input
-					placeholder="Custom header key (e.g., uid)"
+					placeholder="Custom header key"
 					value={customHeaderKey}
 					onChange={(e) => {
 						isFilteringRef.current = true;
@@ -348,7 +323,7 @@ export function RecentLogs({ initialData, projectId }: RecentLogsProps) {
 				/>
 
 				<Input
-					placeholder="Custom header value (e.g., 12345)"
+					placeholder="Custom header value"
 					value={customHeaderValue}
 					onChange={(e) => {
 						isFilteringRef.current = true;
