@@ -1,10 +1,18 @@
 {
+	"title": "LLM Gateway",
+	"description": "LLM Gateway Documentation",
+	"icon": "Building",
+	"root": true,
 	"pages": [
-		"---API Documentation---",
+		"---Developer Docs---",
 		"index",
-		"metadata",
-		"source",
-		"...",
+		"quick-start",
+		"self-host",
+		"---Features---",
+		"features/custom-providers",
+		"features/metadata",
+		"features/source",
+		"features/...",
 		"---References---",
 		"...(api)"
 	]
