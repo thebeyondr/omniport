@@ -3,6 +3,51 @@ import { models } from "./models";
 import type { ProviderId } from "./providers";
 
 /**
+ * Fetches an image from URL and converts it to base64
+ */
+async function fetchImageAsBase64(
+	url: string,
+): Promise<{ data: string; mimeType: string }> {
+	const response = await fetch(url);
+
+	if (!response.ok) {
+		throw new Error(
+			`Failed to fetch image: ${response.status} ${response.statusText}`,
+		);
+	}
+
+	// Check content length (20MB = 20 * 1024 * 1024 bytes)
+	const contentLength = response.headers.get("content-length");
+	if (contentLength && parseInt(contentLength) > 20 * 1024 * 1024) {
+		throw new Error("Image size exceeds 20MB limit");
+	}
+
+	const contentType = response.headers.get("content-type");
+	if (!contentType || !contentType.startsWith("image/")) {
+		throw new Error("URL does not point to a valid image");
+	}
+
+	const arrayBuffer = await response.arrayBuffer();
+
+	// Check actual size after download
+	if (arrayBuffer.byteLength > 20 * 1024 * 1024) {
+		throw new Error("Image size exceeds 20MB limit");
+	}
+
+	// Convert arrayBuffer to base64 using browser-compatible API
+	const uint8Array = new Uint8Array(arrayBuffer);
+	const binaryString = Array.from(uint8Array, (byte) =>
+		String.fromCharCode(byte),
+	).join("");
+	const base64 = btoa(binaryString);
+
+	return {
+		data: base64,
+		mimeType: contentType,
+	};
+}
+
+/**
  * Get the appropriate headers for a given provider API call
  */
 export function getProviderHeaders(
@@ -41,7 +86,7 @@ export function getProviderHeaders(
 /**
  * Prepares the request body for different providers
  */
-export function prepareRequestBody(
+export async function prepareRequestBody(
 	usedProvider: ProviderId,
 	usedModel: string,
 	messages: any[],
@@ -196,23 +241,44 @@ export function prepareRequestBody(
 			delete requestBody.messages; // Not used in body for Google providers
 			delete requestBody.tool_choice; // Google doesn't support tool_choice parameter
 
-			requestBody.contents = messages.map((m) => ({
-				role: m.role === "assistant" ? "model" : "user", // get rid of system role
-				parts: Array.isArray(m.content)
-					? m.content.map((i: any) => {
-							if (i.type === "text") {
-								return {
-									text: i.text,
-								};
-							}
-							throw new Error(`Not supported content type yet: ${i.type}`);
-						})
-					: [
-							{
-								text: m.content,
-							},
-						],
-			}));
+			requestBody.contents = await Promise.all(
+				messages.map(async (m) => ({
+					role: m.role === "assistant" ? "model" : "user", // get rid of system role
+					parts: Array.isArray(m.content)
+						? await Promise.all(
+								m.content.map(async (i: any) => {
+									if (i.type === "text") {
+										return {
+											text: i.text,
+										};
+									}
+									if (i.type === "image_url") {
+										const imageUrl = i.image_url.url;
+										try {
+											const { data, mimeType } =
+												await fetchImageAsBase64(imageUrl);
+											return {
+												inline_data: {
+													mime_type: mimeType,
+													data: data,
+												},
+											};
+										} catch (error) {
+											throw new Error(
+												`Failed to process image from URL ${imageUrl}: ${error instanceof Error ? error.message : "Unknown error"}`,
+											);
+										}
+									}
+									throw new Error(`Not supported content type yet: ${i.type}`);
+								}),
+							)
+						: [
+								{
+									text: m.content,
+								},
+							],
+				})),
+			);
 
 			// Transform tools from OpenAI format to Google format
 			if (tools && tools.length > 0) {
@@ -552,7 +618,7 @@ export async function validateProviderKey(
 		const supportsMaxTokens =
 			supportedParameters?.includes("max_tokens") ?? true;
 
-		const payload = prepareRequestBody(
+		const payload = await prepareRequestBody(
 			provider,
 			validationModel,
 			messages,

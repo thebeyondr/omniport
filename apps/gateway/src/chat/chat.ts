@@ -2376,7 +2376,7 @@ chat.openapi(completions, async (c) => {
 		(provider) => (provider as any).reasoning === true,
 	);
 
-	const requestBody = prepareRequestBody(
+	const requestBody = await prepareRequestBody(
 		usedProvider,
 		usedModel,
 		messages,
