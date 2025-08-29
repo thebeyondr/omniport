@@ -436,6 +436,9 @@ export async function prepareRequestBody(
 				if (!supportsReasoning) {
 					return 0;
 				}
+				if (!reasoning_effort) {
+					return 0;
+				}
 				switch (effort) {
 					case "low":
 						return 1024; // Anthropic minimum
@@ -493,8 +496,8 @@ export async function prepareRequestBody(
 				}
 			}
 
-			// Enable thinking for reasoning-capable Anthropic models
-			if (supportsReasoning) {
+			// Enable thinking for reasoning-capable Anthropic models when reasoning_effort is specified
+			if (supportsReasoning && reasoning_effort) {
 				requestBody.thinking = {
 					type: "enabled",
 					budget_tokens: thinkingBudget,
