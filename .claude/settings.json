@@ -1,6 +1,6 @@
 {
 	"hooks": {
-		"PostToolUsePAUSED": [
+		"PostToolUse": [
 			{
 				"matcher": "Edit|MultiEdit|Write",
 				"hooks": [
