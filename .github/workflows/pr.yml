@@ -16,6 +16,6 @@ jobs:
     steps:
       - uses: steebchen/action-auto-semantic-pull-request@main
         with:
-          llmGatewayApiKey: ${{ secrets.PR_MESSAGE_LLM_GATEWAY_API_KEY }}
+          aiApiKey: ${{ secrets.PR_MESSAGE_LLM_GATEWAY_API_KEY }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
