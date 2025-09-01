@@ -35,10 +35,6 @@ sudo -u postgres createdb db 2>/dev/null || echo "✅ DB database already exists
 echo "📦 Installing Node.js dependencies..."
 pnpm install
 
-# Run prepare script (from origin/main)
-echo "🔧 Running prepare script..."
-pnpm run prepare
-
 # Set up database schemas and seed data
 echo "🌱 Setting up database schemas and seeding data..."
 pnpm push-test
@@ -51,7 +47,7 @@ service postgresql status --no-pager --lines=0 || echo "⚠️ PostgreSQL status
 service redis-server status --no-pager --lines=0 || echo "⚠️ Redis status check failed"
 
 echo ""
-echo "✅ Setup complete! You can now run:"
+echo "✅ Setup complete! You can now run e2e test, for example:"
 echo "   • pnpm dev - Start all development servers"
 echo "   • pnpm test:e2e - Run E2E tests"
 echo "   • TEST_MODELS=openai/gpt-5-mini pnpm test:e2e - Run E2E tests for specific model"
