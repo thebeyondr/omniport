@@ -1033,8 +1033,9 @@ export async function validateProviderKey(
 		const providerMapping = modelDef?.providers.find(
 			(p) => p.providerId === provider && p.modelName === validationModel,
 		);
-		const supportedParameters = (providerMapping as ProviderModelMapping)
-			?.supportedParameters;
+		const supportedParameters = (
+			providerMapping as ProviderModelMapping | undefined
+		)?.supportedParameters;
 		const supportsMaxTokens =
 			supportedParameters?.includes("max_tokens") ?? true;
 

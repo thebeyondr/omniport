@@ -15,6 +15,7 @@ import {
 	getProviderHeaders,
 	type Model,
 	type ModelDefinition,
+	type ProviderModelMapping,
 	models,
 	prepareRequestBody,
 	type BaseMessage,
@@ -1748,7 +1749,7 @@ const completionsRequestSchema = z.object({
 		.enum(["low", "medium", "high"])
 		.nullable()
 		.optional()
-		.transform((val) => (val === null || (val as any) === "" ? undefined : val))
+		.transform((val) => (val === null ? undefined : val))
 		.openapi({
 			description: "Controls the reasoning effort for reasoning-capable models",
 			example: "medium",
@@ -2070,7 +2071,7 @@ chat.openapi(completions, async (c) => {
 	if (reasoning_effort !== undefined) {
 		// Check if any provider for this model supports reasoning
 		const supportsReasoning = modelInfo.providers.some(
-			(provider) => (provider as any).reasoning === true,
+			(provider) => (provider as ProviderModelMapping).reasoning === true,
 		);
 
 		if (!supportsReasoning) {
@@ -2082,7 +2083,7 @@ chat.openapi(completions, async (c) => {
 					reasoning_effort,
 					modelProviders: modelInfo.providers.map((p) => ({
 						providerId: p.providerId,
-						reasoning: (p as any).reasoning,
+						reasoning: (p as ProviderModelMapping).reasoning,
 					})),
 				},
 			);
@@ -2584,7 +2585,7 @@ chat.openapi(completions, async (c) => {
 
 	// Check if the model supports reasoning
 	const supportsReasoning = modelInfo.providers.some(
-		(provider) => (provider as any).reasoning === true,
+		(provider) => (provider as ProviderModelMapping).reasoning === true,
 	);
 
 	// Check if messages contain existing tool calls or tool results
@@ -2768,7 +2769,8 @@ chat.openapi(completions, async (c) => {
 					estimatedCost: false,
 					cached: true,
 					toolResults:
-						(cachedStreamingResponse.metadata as any)?.toolResults || null,
+						(cachedStreamingResponse.metadata as { toolResults?: any })
+							?.toolResults || null,
 				});
 
 				// Return cached streaming response by replaying chunks with original timing
