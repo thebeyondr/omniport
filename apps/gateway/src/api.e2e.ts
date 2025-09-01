@@ -59,8 +59,41 @@ const filteredModels = models
 	.filter((model) => !["custom", "auto"].includes(model.id))
 	// Filter out deactivated models
 	.filter((model) => !model.deactivatedAt || new Date() <= model.deactivatedAt)
-	// Filter out free models if not in full mode
-	.filter((model) => fullMode || !(model as ModelDefinition).free)
+	// Filter out free models if not in full mode, unless they have test: "only" or are in TEST_MODELS
+	.filter((model) => {
+		const isFreeModel = (model as ModelDefinition).free;
+		if (!isFreeModel) {
+			return true;
+		} // Non-free models are always included
+		if (fullMode) {
+			return true;
+		} // In full mode, all models are included
+
+		// For free models in non-full mode, include if:
+		// 1. Any provider has test: "only"
+		if (
+			model.providers.some(
+				(provider: ProviderModelMapping) => provider.test === "only",
+			)
+		) {
+			return true;
+		}
+
+		// 2. Model is specified in TEST_MODELS
+		if (specifiedModels) {
+			const modelInTestModels = model.providers.some(
+				(provider: ProviderModelMapping) => {
+					const providerModelId = `${provider.providerId}/${model.id}`;
+					return specifiedModels.includes(providerModelId);
+				},
+			);
+			if (modelInTestModels) {
+				return true;
+			}
+		}
+
+		return false; // Otherwise, exclude free models in non-full mode
+	})
 	// Filter by TEST_MODELS if specified
 	.filter((model) => {
 		if (!specifiedModels) {
