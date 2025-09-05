@@ -1,6 +1,7 @@
 {
 	"name": "llmgateway",
 	"private": true,
+	"license": "SEE LICENSE IN LICENSE",
 	"workspaces": [
 		"apps/*",
 		"packages/*"
@@ -56,6 +57,5 @@
 	},
 	"disabledLinters": [
 		"eslint-plugin-tailwindcss"
-	],
-	"license": "SEE LICENSE IN LICENSE"
+	]
 }

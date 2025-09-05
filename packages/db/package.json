@@ -1,8 +1,8 @@
 {
 	"name": "@llmgateway/db",
-	"license": "SEE LICENSE IN ../../LICENSE",
 	"version": "1.0.0",
 	"private": true,
+	"license": "SEE LICENSE IN ../../LICENSE",
 	"type": "module",
 	"exports": {
 		".": {
