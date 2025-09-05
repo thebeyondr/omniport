@@ -56,5 +56,6 @@
 	},
 	"disabledLinters": [
 		"eslint-plugin-tailwindcss"
-	]
+	],
+	"license": "SEE LICENSE IN LICENSE"
 }

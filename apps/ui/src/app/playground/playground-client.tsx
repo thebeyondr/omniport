@@ -133,30 +133,31 @@ export function PlaygroundClient() {
 		}
 	}, [currentChatData]);
 
-	// Update URL when model changes
 	useEffect(() => {
-		const currentParams = new URLSearchParams(searchParams.toString());
+		const currentParams = new URLSearchParams(window.location.search);
+
 		if (selectedModel !== "gpt-4o-mini") {
 			currentParams.set("model", selectedModel);
 		} else {
 			currentParams.delete("model");
 		}
 
-		const newUrl = currentParams.toString()
-			? `${window.location.pathname}?${currentParams.toString()}`
+		const newQuery = currentParams.toString();
+		const newUrl = newQuery
+			? `${window.location.pathname}?${newQuery}`
 			: window.location.pathname;
 
-		router.replace(newUrl);
-	}, [selectedModel, router, searchParams]);
-
-	// Sync with URL changes (back/forward navigation)
-	useEffect(() => {
-		const modelFromUrl = searchParams.get("model");
-		const targetModel = modelFromUrl || "gpt-4o-mini";
-		if (targetModel !== selectedModel) {
-			setSelectedModel(targetModel);
+		// Only replace if it actually changed to avoid redundant navigations
+		const currentUrl = window.location.pathname + window.location.search;
+		if (currentUrl !== newUrl) {
+			router.replace(newUrl);
 		}
-	}, [searchParams, selectedModel]);
+	}, [selectedModel, router]);
+
+	useEffect(() => {
+		const targetModel = searchParams.get("model") || "gpt-4o-mini";
+		setSelectedModel((prev) => (prev === targetModel ? prev : targetModel));
+	}, [searchParams]);
 
 	const handleModelSelect = (model: string) => {
 		setSelectedModel(model);

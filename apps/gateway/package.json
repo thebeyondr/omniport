@@ -1,5 +1,6 @@
 {
 	"name": "gateway",
+	"license": "SEE LICENSE IN ../../LICENSE",
 	"version": "1.0.0",
 	"private": true,
 	"type": "module",
