@@ -16,6 +16,9 @@
 		"features/custom-providers",
 		"features/metadata",
 		"features/...",
+		"---Resources---",
+		"resources/rate-limits",
+		"resources/...",
 		"---References---",
 		"...(api)"
 	]
