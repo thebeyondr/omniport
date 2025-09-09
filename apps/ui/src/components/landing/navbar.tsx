@@ -93,19 +93,9 @@ export const Navbar = ({ children }: { children?: React.ReactNode }) => {
 			description: "Product updates, tutorials, benchmarks, and announcements.",
 		},
 		{
-			title: "Models",
-			href: "/models",
-			description: "Explore all supported models, pricing, and capabilities.",
-		},
-		{
 			title: "Playground",
 			href: "/playground",
 			description: "Try models in your browser with streaming and tools.",
-		},
-		{
-			title: "Providers",
-			href: "/providers",
-			description: "Connect and manage your provider API keys.",
 		},
 		{
 			title: "Docs",
@@ -115,9 +105,19 @@ export const Navbar = ({ children }: { children?: React.ReactNode }) => {
 			external: true,
 		},
 		{
+			title: "Models",
+			href: "/models",
+			description: "Explore all supported models, pricing, and capabilities.",
+		},
+		{
 			title: "Changelog",
 			href: "/changelog",
 			description: "What’s new in LLM Gateway across releases.",
+		},
+		{
+			title: "Providers",
+			href: "/providers",
+			description: "Connect and manage your provider API keys.",
 		},
 	];
 
