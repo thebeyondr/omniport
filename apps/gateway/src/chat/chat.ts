@@ -2206,7 +2206,12 @@ chat.openapi(completions, async (c) => {
 	}
 
 	// Check if reasoning_effort is specified but model doesn't support reasoning
-	if (reasoning_effort !== undefined) {
+	// Skip this check for "auto" and "custom" models as they will be resolved dynamically
+	if (
+		reasoning_effort !== undefined &&
+		requestedModel !== "auto" &&
+		requestedModel !== "custom"
+	) {
 		// Check if any provider for this model supports reasoning
 		const supportsReasoning = modelInfo.providers.some(
 			(provider) => (provider as ProviderModelMapping).reasoning === true,
@@ -2442,11 +2447,21 @@ chat.openapi(completions, async (c) => {
 				availableProviders.includes(provider.providerId),
 			);
 
-			// Filter by context size requirement
+			// Filter by context size requirement and reasoning capability if needed
 			const suitableProviders = availableModelProviders.filter((provider) => {
 				// Use the provider's context size, defaulting to a reasonable value if not specified
 				const modelContextSize = provider.contextSize ?? 8192;
-				return modelContextSize >= requiredContextSize;
+				const contextSizeMet = modelContextSize >= requiredContextSize;
+
+				// If reasoning_effort is specified, only include providers that support reasoning
+				if (reasoning_effort !== undefined) {
+					return (
+						contextSizeMet &&
+						(provider as ProviderModelMapping).reasoning === true
+					);
+				}
+
+				return contextSizeMet;
 			});
 
 			if (suitableProviders.length > 0) {
