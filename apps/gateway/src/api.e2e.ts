@@ -1817,7 +1817,8 @@ describe("e2e", () => {
 
 		const log = await validateLogs();
 		expect(log.streamed).toBe(false);
-		expect(log.usedModel).toBe("gpt-5-nano");
+		expect(log.usedModel).toBe("openai/gpt-5-nano");
+		expect(log.usedModelMapping).toBe("gpt-5-nano");
 		expect(log.usedProvider).toBe("openai");
 
 		// Verify it's a reasoning model response

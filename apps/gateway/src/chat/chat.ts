@@ -231,6 +231,7 @@ function createLogEntry(
 	apiKey: ApiKey,
 	providerKeyId: string | undefined,
 	usedModel: string,
+	usedModelMapping: string | undefined,
 	usedProvider: string,
 	requestedModel: string,
 	requestedProvider: string | undefined,
@@ -258,6 +259,7 @@ function createLogEntry(
 		apiKeyId: apiKey.id,
 		usedMode: providerKeyId ? "api-keys" : "credits",
 		usedModel,
+		usedModelMapping,
 		usedProvider,
 		requestedModel,
 		requestedProvider,
@@ -2616,6 +2618,10 @@ chat.openapi(completions, async (c) => {
 
 	const baseModelName = finalModelInfo?.id || usedModel;
 
+	// Create the model mapping values according to new schema
+	const usedModelMapping = usedModel; // Store the original provider model name
+	const usedModelFormatted = `${usedProvider}/${baseModelName}`; // Store in LLMGateway format
+
 	let url: string | undefined;
 
 	// Get the provider key for the selected provider based on project mode
@@ -2908,7 +2914,8 @@ chat.openapi(completions, async (c) => {
 					project,
 					apiKey,
 					providerKey?.id,
-					usedModel,
+					usedModelFormatted,
+					usedModelMapping,
 					usedProvider,
 					requestedModel,
 					requestedProvider,
@@ -2995,7 +3002,8 @@ chat.openapi(completions, async (c) => {
 					project,
 					apiKey,
 					providerKey?.id,
-					usedModel,
+					usedModelFormatted,
+					usedModelMapping,
 					usedProvider,
 					requestedModel,
 					requestedProvider,
@@ -3206,7 +3214,8 @@ chat.openapi(completions, async (c) => {
 						project,
 						apiKey,
 						providerKey?.id,
-						usedModel,
+						usedModelFormatted,
+						usedModelMapping,
 						usedProvider,
 						requestedModel,
 						requestedProvider,
@@ -3328,7 +3337,8 @@ chat.openapi(completions, async (c) => {
 					project,
 					apiKey,
 					providerKey?.id,
-					usedModel,
+					usedModelFormatted,
+					usedModelMapping,
 					usedProvider,
 					requestedModel,
 					requestedProvider,
@@ -4123,7 +4133,8 @@ chat.openapi(completions, async (c) => {
 					project,
 					apiKey,
 					providerKey?.id,
-					usedModel,
+					usedModelFormatted,
+					usedModelMapping,
 					usedProvider,
 					requestedModel,
 					requestedProvider,
@@ -4267,7 +4278,8 @@ chat.openapi(completions, async (c) => {
 			project,
 			apiKey,
 			providerKey?.id,
-			usedModel,
+			usedModelFormatted,
+			usedModelMapping,
 			usedProvider,
 			requestedModel,
 			requestedProvider,
@@ -4343,7 +4355,8 @@ chat.openapi(completions, async (c) => {
 			project,
 			apiKey,
 			providerKey?.id,
-			usedModel,
+			usedModelFormatted,
+			usedModelMapping,
 			usedProvider,
 			requestedModel,
 			requestedProvider,
@@ -4516,7 +4529,8 @@ chat.openapi(completions, async (c) => {
 		project,
 		apiKey,
 		providerKey?.id,
-		usedModel,
+		usedModelFormatted,
+		usedModelMapping,
 		usedProvider,
 		requestedModel,
 		requestedProvider,
