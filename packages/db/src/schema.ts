@@ -282,15 +282,9 @@ export const log = pgTable("log", {
 		.notNull()
 		.defaultNow()
 		.$onUpdate(() => new Date()),
-	organizationId: text()
-		.notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
-	projectId: text()
-		.notNull()
-		.references(() => project.id, { onDelete: "cascade" }),
-	apiKeyId: text()
-		.notNull()
-		.references(() => apiKey.id, { onDelete: "cascade" }),
+	organizationId: text().notNull(),
+	projectId: text().notNull(),
+	apiKeyId: text().notNull(),
 	duration: integer().notNull(),
 	requestedModel: text().notNull(),
 	requestedProvider: text(),
