@@ -6,6 +6,7 @@ import {
 } from "@llmgateway/instrumentation";
 import { logger } from "@llmgateway/logger";
 
+import { redisClient } from "./auth/config";
 import { app } from "./index";
 import { sendInstallationBeacon } from "./lib/beacon";
 
@@ -79,6 +80,10 @@ const gracefulShutdown = async (signal: string, server: ServerType) => {
 		logger.info("Closing HTTP server");
 		await closeServer(server);
 		logger.info("HTTP server closed");
+
+		logger.info("Closing Redis connection");
+		await redisClient.quit();
+		logger.info("Redis connection closed");
 
 		logger.info("Closing database connection");
 		await closeDatabase();
