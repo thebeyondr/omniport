@@ -52,7 +52,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [api, gateway, ui, docs]
+        app: [api, gateway, ui, docs, worker]
         platform:
           - linux/amd64
           - linux/arm64
