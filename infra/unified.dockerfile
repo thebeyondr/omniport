@@ -97,7 +97,6 @@ COPY apps/api/package.json ./apps/api/
 COPY apps/gateway/package.json ./apps/gateway/
 COPY apps/ui/package.json ./apps/ui/
 COPY apps/docs/package.json ./apps/docs/
-COPY packages/auth/package.json ./packages/auth/
 COPY packages/db/package.json ./packages/db/
 COPY packages/models/package.json ./packages/models/
 COPY packages/logger/package.json ./packages/logger/
