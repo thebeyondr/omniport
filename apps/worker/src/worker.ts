@@ -14,15 +14,17 @@ import {
 	tables,
 	apiKey,
 	inArray,
+	type LogInsertData,
 } from "@llmgateway/db";
 import { logger } from "@llmgateway/logger";
 import { hasErrorCode } from "@llmgateway/models";
-import z from "zod";
+import { calculateFees } from "@llmgateway/shared";
+import Stripe from "stripe";
+import { z } from "zod";
 
-import { calculateFees } from "../../api/src/lib/fee-calculator";
-import { stripe } from "../../api/src/routes/payments";
-
-import type { LogInsertData } from "./lib/logs";
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_123", {
+	apiVersion: "2025-04-30.basil",
+});
 
 const AUTO_TOPUP_LOCK_KEY = "auto_topup_check";
 const CREDIT_PROCESSING_LOCK_KEY = "credit_processing";
