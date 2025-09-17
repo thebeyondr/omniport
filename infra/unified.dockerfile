@@ -98,7 +98,7 @@ RUN STORE_PATH="/root/.local/share/pnpm/store" && \
         echo "pnpm store path mismatch: ${STORE_PATH}"; \
         exit 1; \
     fi && \
-    echo "pnpm store path matches: ${STORE_PATH}" \
+    echo "pnpm store path matches: ${STORE_PATH}"
 
 # Copy package files and install dependencies
 COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml ./
