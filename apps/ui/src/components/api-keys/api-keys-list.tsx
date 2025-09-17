@@ -292,11 +292,11 @@ export function ApiKeysList({
 											{key.description}
 										</span>
 										<Badge
-											variant="outline"
+											variant="secondary"
 											className={cn(
 												"text-xs uppercase text-gray-500 border-gray-500/50 dark:text-gray-300 dark:border-gray-300/50",
 												key.status === "active" &&
-													"text-green-500 border-green-500/50 dark:text-green-500 dark:border-green-500/50",
+													"bg-green-600/10 text-green-600 border-green-600/50 dark:text-green-500 dark:border-green-500/50",
 											)}
 										>
 											{key.status}
@@ -499,7 +499,7 @@ export function ApiKeysList({
 										className={cn(
 											"text-xs uppercase text-gray-500 border-gray-500/50 dark:text-gray-300 dark:border-gray-300/50",
 											key.status === "active" &&
-												"text-green-500 border-green-500/50 dark:text-green-500 dark:border-green-500/50",
+												"bg-green-600/10 text-green-600 border-green-600/50 dark:text-green-500 dark:border-green-500/50",
 										)}
 									>
 										{key.status}
