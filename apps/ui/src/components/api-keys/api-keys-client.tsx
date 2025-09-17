@@ -60,8 +60,8 @@ export function ApiKeysClient({ initialData }: { initialData: ApiKey[] }) {
 
 	return (
 		<div className="flex flex-col">
-			<div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
-				<div className="flex items-center justify-between space-y-2">
+			<div className="flex flex-col space-y-4 p-4 pt-6 md:p-8">
+				<div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
 					<div>
 						<h2 className="text-3xl font-bold tracking-tight">API Keys</h2>
 						<p className="text-muted-foreground">
@@ -70,7 +70,7 @@ export function ApiKeysClient({ initialData }: { initialData: ApiKey[] }) {
 					</div>
 					{selectedProject && (
 						<CreateApiKeyDialog selectedProject={selectedProject}>
-							<Button disabled={!selectedProject}>
+							<Button disabled={!selectedProject} className="w-full md:w-auto">
 								<Plus className="mr-2 h-4 w-4" />
 								Create API Key
 							</Button>
@@ -78,25 +78,40 @@ export function ApiKeysClient({ initialData }: { initialData: ApiKey[] }) {
 					)}
 				</div>
 				<div className="space-y-4">
-					<Card>
-						<CardHeader>
-							<CardTitle>Your API Keys</CardTitle>
-							<CardDescription>
-								API keys allow you to authenticate with the LLM Gateway API.
-								{!selectedProject && (
-									<span className="block mt-2 text-amber-600">
-										Loading project information...
-									</span>
-								)}
-							</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<ApiKeysList
-								selectedProject={selectedProject}
-								initialData={initialData}
-							/>
-						</CardContent>
-					</Card>
+					{/* Desktop Card */}
+					<div className="hidden md:block">
+						<Card>
+							<CardHeader>
+								<CardTitle>Keys</CardTitle>
+								<CardDescription>
+									{!selectedProject && (
+										<span className="text-amber-600">
+											Loading project information...
+										</span>
+									)}
+								</CardDescription>
+							</CardHeader>
+							<CardContent>
+								<ApiKeysList
+									selectedProject={selectedProject}
+									initialData={initialData}
+								/>
+							</CardContent>
+						</Card>
+					</div>
+
+					{/* Mobile - Direct rendering */}
+					<div className="md:hidden">
+						{!selectedProject && (
+							<div className="text-amber-600 mb-4">
+								Loading project information...
+							</div>
+						)}
+						<ApiKeysList
+							selectedProject={selectedProject}
+							initialData={initialData}
+						/>
+					</div>
 				</div>
 			</div>
 		</div>
