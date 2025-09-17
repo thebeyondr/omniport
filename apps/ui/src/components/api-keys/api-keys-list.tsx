@@ -50,11 +50,12 @@ import {
 } from "@/lib/components/table";
 import { toast } from "@/lib/components/use-toast";
 import { useApi } from "@/lib/fetch-client";
+import { cn } from "@/lib/utils";
 
 import { CreateApiKeyDialog } from "./create-api-key-dialog";
 import { IamRulesDialog } from "./iam-rules-dialog";
 
-import type { Project, ApiKey } from "@/lib/types";
+import type { ApiKey, Project } from "@/lib/types";
 
 interface ApiKeysListProps {
 	selectedProject: Project | null;
@@ -273,7 +274,6 @@ export function ApiKeysList({
 							<TableHead>Name</TableHead>
 							<TableHead>API Key</TableHead>
 							<TableHead>Created</TableHead>
-							<TableHead>Status</TableHead>
 							<TableHead>Usage</TableHead>
 							<TableHead>Usage Limit</TableHead>
 							<TableHead>IAM Rules</TableHead>
@@ -282,26 +282,40 @@ export function ApiKeysList({
 					</TableHeader>
 					<TableBody>
 						{keys!.map((key) => (
-							<TableRow key={key.id}>
-								<TableCell className="font-medium">{key.description}</TableCell>
+							<TableRow
+								key={key.id}
+								className="hover:bg-muted/50 transition-colors"
+							>
+								<TableCell className="font-medium">
+									<div className="flex items-center gap-2 h-full">
+										<span className="text-sm font-medium">
+											{key.description}
+										</span>
+										<Badge
+											variant="outline"
+											className={cn(
+												"text-xs uppercase text-gray-500 border-gray-500/50 dark:text-gray-300 dark:border-gray-300/50",
+												key.status === "active" &&
+													"text-green-500 border-green-500/50 dark:text-green-500 dark:border-green-500/50",
+											)}
+										>
+											{key.status}
+										</Badge>
+									</div>
+								</TableCell>
 								<TableCell>
 									<div className="flex items-center space-x-2">
 										<span className="font-mono text-xs">{key.maskedToken}</span>
 									</div>
 								</TableCell>
-								<TableCell>{key.createdAt}</TableCell>
 								<TableCell>
-									<Badge
-										variant={
-											key.status === "active"
-												? "default"
-												: key.status === "deleted"
-													? "destructive"
-													: "secondary"
-										}
-									>
-										{key.status}
-									</Badge>
+									{Intl.DateTimeFormat(undefined, {
+										month: "short",
+										day: "numeric",
+										year: "numeric",
+										hour: "2-digit",
+										minute: "2-digit",
+									}).format(new Date(key.createdAt))}
 								</TableCell>
 								<TableCell>${Number(key.usage).toFixed(2)}</TableCell>
 								<TableCell>
@@ -475,25 +489,31 @@ export function ApiKeysList({
 			{/* Mobile Cards */}
 			<div className="md:hidden space-y-3">
 				{keys!.map((key) => (
-					<div key={key.id} className="border rounded-lg p-4 space-y-3">
+					<div key={key.id} className="border rounded-lg p-3 space-y-3">
 						<div className="flex items-start justify-between">
 							<div className="flex-1 min-w-0">
-								<h3 className="font-medium text-sm">{key.description}</h3>
-								<div className="flex items-center gap-2 mt-1">
+								<div className="flex items-center gap-2">
+									<h3 className="font-medium text-sm">{key.description}</h3>
 									<Badge
-										variant={
-											key.status === "active"
-												? "default"
-												: key.status === "deleted"
-													? "destructive"
-													: "secondary"
-										}
-										className="text-xs"
+										variant="outline"
+										className={cn(
+											"text-xs uppercase text-gray-500 border-gray-500/50 dark:text-gray-300 dark:border-gray-300/50",
+											key.status === "active" &&
+												"text-green-500 border-green-500/50 dark:text-green-500 dark:border-green-500/50",
+										)}
 									>
 										{key.status}
 									</Badge>
+								</div>
+								<div className="flex items-center gap-2 mt-1">
 									<span className="text-xs text-muted-foreground">
-										{key.createdAt}
+										{Intl.DateTimeFormat(undefined, {
+											month: "short",
+											day: "numeric",
+											year: "numeric",
+											hour: "2-digit",
+											minute: "2-digit",
+										}).format(new Date(key.createdAt))}
 									</span>
 								</div>
 							</div>
