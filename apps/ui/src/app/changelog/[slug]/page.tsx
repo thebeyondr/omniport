@@ -1,4 +1,4 @@
-// eslint-disable-next-line import/order
+/* eslint-disable import/order */
 import { allChangelogs } from "content-collections";
 
 import { ArrowLeftIcon } from "lucide-react";
