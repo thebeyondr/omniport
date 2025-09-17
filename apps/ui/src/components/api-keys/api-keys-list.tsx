@@ -7,6 +7,7 @@ import {
 	Shield,
 } from "lucide-react";
 
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -18,7 +19,6 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/lib/components/alert-dialog";
-import { Badge } from "@/lib/components/badge";
 import { Button } from "@/lib/components/button";
 import {
 	Dialog,
@@ -50,7 +50,6 @@ import {
 } from "@/lib/components/table";
 import { toast } from "@/lib/components/use-toast";
 import { useApi } from "@/lib/fetch-client";
-import { cn } from "@/lib/utils";
 
 import { CreateApiKeyDialog } from "./create-api-key-dialog";
 import { IamRulesDialog } from "./iam-rules-dialog";
@@ -291,16 +290,7 @@ export function ApiKeysList({
 										<span className="text-sm font-medium">
 											{key.description}
 										</span>
-										<Badge
-											variant="secondary"
-											className={cn(
-												"text-xs uppercase text-gray-500 border-gray-500/50 dark:text-gray-300 dark:border-gray-300/50",
-												key.status === "active" &&
-													"bg-green-600/10 text-green-600 border-green-600/50 dark:text-green-500 dark:border-green-500/50",
-											)}
-										>
-											{key.status}
-										</Badge>
+										<StatusBadge status={key.status} variant="detailed" />
 									</div>
 								</TableCell>
 								<TableCell>
@@ -494,16 +484,7 @@ export function ApiKeysList({
 							<div className="flex-1 min-w-0">
 								<div className="flex items-center gap-2">
 									<h3 className="font-medium text-sm">{key.description}</h3>
-									<Badge
-										variant="outline"
-										className={cn(
-											"text-xs uppercase text-gray-500 border-gray-500/50 dark:text-gray-300 dark:border-gray-300/50",
-											key.status === "active" &&
-												"bg-green-600/10 text-green-600 border-green-600/50 dark:text-green-500 dark:border-green-500/50",
-										)}
-									>
-										{key.status}
-									</Badge>
+									<StatusBadge status={key.status} />
 								</div>
 								<div className="flex items-center gap-2 mt-1">
 									<span className="text-xs text-muted-foreground">
