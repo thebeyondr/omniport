@@ -259,8 +259,13 @@ export function ApiKeyStep() {
 															{key.status}
 														</Badge>
 													</TableCell>
-													<TableCell className="text-sm text-muted-foreground">
-														{key.createdAt}
+													<TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+														{new Intl.DateTimeFormat(undefined, {
+															month: "short",
+															day: "numeric",
+															hour: "2-digit",
+															minute: "2-digit",
+														}).format(new Date(key.createdAt))}
 													</TableCell>
 												</TableRow>
 											))}
