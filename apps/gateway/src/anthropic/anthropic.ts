@@ -440,7 +440,10 @@ anthropic.openapi(messages, async (c) => {
 	}
 
 	// Make request to the existing chat completions endpoint
-	const chatCompletionsUrl = new URL(c.req.url);
+	const chatCompletionsHostname = new URL(c.req.url);
+	const chatCompletionsUrl = new URL(
+		chatCompletionsHostname.protocol + "//" + chatCompletionsHostname.host,
+	);
 	chatCompletionsUrl.pathname = "/v1/chat/completions";
 
 	const response = await fetch(chatCompletionsUrl.toString(), {
@@ -715,14 +718,15 @@ anthropic.openapi(messages, async (c) => {
 	}
 
 	// Handle non-streaming response
+	let openaiText = "";
 	let openaiResponse: any;
 	try {
-		const text = await response.json();
-		openaiResponse = JSON.parse(text);
+		openaiText = await response.text();
+		openaiResponse = JSON.parse(openaiText);
 	} catch (error) {
 		logger.error("Failed to parse OpenAI response", {
 			err: error instanceof Error ? error : new Error(String(error)),
-			responseText: await response.text(),
+			responseText: openaiText || "(empty)",
 		});
 		throw new HTTPException(500, {
 			message: `Failed to parse OpenAI response: ${error instanceof Error ? error.message : String(error)}`,
