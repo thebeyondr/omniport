@@ -393,7 +393,7 @@ chat.openapi(completions, async (c) => {
 	if (!source) {
 		const userAgent = c.req.header("User-Agent") || "";
 		if (/^claude-cli\/.+/.test(userAgent)) {
-			source = "claude.ai";
+			source = "claude.com/claude-code";
 		}
 	}
 
