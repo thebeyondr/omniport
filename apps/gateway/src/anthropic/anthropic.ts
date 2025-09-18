@@ -1,6 +1,8 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 
+import { app } from "@/app.js";
+
 import { logger } from "@llmgateway/logger";
 
 import type { ServerTypes } from "@/vars.js";
@@ -439,14 +441,8 @@ anthropic.openapi(messages, async (c) => {
 		openaiRequest.tools = openaiTools;
 	}
 
-	// Make request to the existing chat completions endpoint
-	const chatCompletionsHostname = new URL(c.req.url);
-	const chatCompletionsUrl = new URL(
-		chatCompletionsHostname.protocol + "//" + chatCompletionsHostname.host,
-	);
-	chatCompletionsUrl.pathname = "/v1/chat/completions";
-
-	const response = await fetch(chatCompletionsUrl.toString(), {
+	// Make internal request to the existing chat completions endpoint using app.request()
+	const response = await app.request("/v1/chat/completions", {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
