@@ -485,20 +485,27 @@ export async function startWorker() {
 	logger.info("Starting worker application...");
 
 	// Initialize providers and models sync
-	void syncProvidersAndModels().catch((error) => {
-		logger.error(
-			"Error during initial sync",
-			error instanceof Error ? error : new Error(String(error)),
-		);
-	});
+	void syncProvidersAndModels()
+		.then(() => {
+			logger.info("Initial sync completed");
+		})
+		.catch((error) => {
+			logger.error(
+				"Error during initial sync",
+				error instanceof Error ? error : new Error(String(error)),
+			);
+		});
 
-	void backfillHistoryIfNeeded().catch((error) => {
-		logger.error(
-			"Error during history backfill",
-			error instanceof Error ? error : new Error(String(error)),
-		);
-	});
-	logger.info("History backfill check completed");
+	void backfillHistoryIfNeeded()
+		.then(() => {
+			logger.info("History backfill check completed");
+		})
+		.catch((error) => {
+			logger.error(
+				"Error during history backfill",
+				error instanceof Error ? error : new Error(String(error)),
+			);
+		});
 
 	// Start statistics calculator
 	logger.info("Starting statistics calculator...");
