@@ -157,7 +157,7 @@ export async function transformAnthropicMessages(
 		// Handle OpenAI-style tool role messages by converting them to Anthropic tool_result content blocks
 		// Use the original role since the mapped role will be "user"
 		const originalRole = m.role === "user" && m.tool_call_id ? "tool" : m.role;
-		if (originalRole === "tool" && m.tool_call_id && m.content) {
+		if (originalRole === "tool" && m.tool_call_id && m.content !== undefined) {
 			// For tool results, we need to check if content is JSON string and parse it appropriately
 			let toolResultContent: string;
 			const contentStr =
@@ -174,6 +174,11 @@ export async function transformAnthropicMessages(
 			} catch {
 				// If it's not valid JSON, use as-is
 				toolResultContent = contentStr;
+			}
+
+			// Anthropic requires non-empty content for tool_result blocks
+			if (!toolResultContent || toolResultContent.trim() === "") {
+				toolResultContent = "No output";
 			}
 
 			// Use the mapped IDs if they exist, otherwise use the original ID
