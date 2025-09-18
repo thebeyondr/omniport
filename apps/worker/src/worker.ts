@@ -485,26 +485,20 @@ export async function startWorker() {
 	logger.info("Starting worker application...");
 
 	// Initialize providers and models sync
-	try {
-		await syncProvidersAndModels();
-		logger.info("Initial providers and models sync completed");
-	} catch (error) {
+	void syncProvidersAndModels().catch((error) => {
 		logger.error(
 			"Error during initial sync",
 			error instanceof Error ? error : new Error(String(error)),
 		);
-	}
+	});
 
-	// Backfill any missing history if the worker was down
-	try {
-		await backfillHistoryIfNeeded();
-		logger.info("History backfill check completed");
-	} catch (error) {
+	void backfillHistoryIfNeeded().catch((error) => {
 		logger.error(
 			"Error during history backfill",
 			error instanceof Error ? error : new Error(String(error)),
 		);
-	}
+	});
+	logger.info("History backfill check completed");
 
 	// Start statistics calculator
 	logger.info("Starting statistics calculator...");
