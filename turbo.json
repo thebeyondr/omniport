@@ -11,10 +11,10 @@
 		"package.json",
 		"pnpm-lock.yaml",
 		"pnpm-workspace.yaml",
-		"tsup.config.ts",
 		"tsconfig.json",
 		"turbo.json"
 	],
+	"concurrency": "16",
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],
@@ -30,6 +30,7 @@
 			]
 		},
 		"generate": {
+			"cache": false,
 			"dependsOn": ["build", "^generate"],
 			"outputs": ["openapi.json", "content/**", "migrations", "**/v1.d.ts"]
 		},

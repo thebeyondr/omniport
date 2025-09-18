@@ -1,6 +1,8 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
 
+import { logger } from "@llmgateway/logger";
+
 import type { ServerTypes } from "@/vars.js";
 
 export const anthropic = new OpenAPIHono<ServerTypes>();
@@ -438,7 +440,10 @@ anthropic.openapi(messages, async (c) => {
 	}
 
 	// Make request to the existing chat completions endpoint
-	const chatCompletionsUrl = new URL(c.req.url);
+	const chatCompletionsHostname = new URL(c.req.url);
+	const chatCompletionsUrl = new URL(
+		chatCompletionsHostname.protocol + "//" + chatCompletionsHostname.host,
+	);
 	chatCompletionsUrl.pathname = "/v1/chat/completions";
 
 	const response = await fetch(chatCompletionsUrl.toString(), {
@@ -449,14 +454,19 @@ anthropic.openapi(messages, async (c) => {
 			"x-request-id": c.req.header("x-request-id") || "",
 			"x-source": c.req.header("x-source") || "",
 			"x-debug": c.req.header("x-debug") || "",
+			"HTTP-Referer": c.req.header("HTTP-Referer") || "",
 		},
 		body: JSON.stringify(openaiRequest),
 	});
 
 	if (!response.ok) {
-		const errorData = await response.json();
+		logger.error("Anthropic -> OpenAI request failed", {
+			status: response.status,
+			statusText: response.statusText,
+		});
+		const errorData = await response.text();
 		throw new HTTPException(response.status as 400 | 401 | 403 | 404 | 500, {
-			message: errorData.error?.message || "Request failed",
+			message: `Request failed: ${errorData}`,
 		});
 	}
 
@@ -708,7 +718,20 @@ anthropic.openapi(messages, async (c) => {
 	}
 
 	// Handle non-streaming response
-	const openaiResponse = await response.json();
+	let openaiText = "";
+	let openaiResponse: any;
+	try {
+		openaiText = await response.text();
+		openaiResponse = JSON.parse(openaiText);
+	} catch (error) {
+		logger.error("Failed to parse OpenAI response", {
+			err: error instanceof Error ? error : new Error(String(error)),
+			responseText: openaiText || "(empty)",
+		});
+		throw new HTTPException(500, {
+			message: `Failed to parse OpenAI response: ${error instanceof Error ? error.message : String(error)}`,
+		});
+	}
 
 	// Transform OpenAI response to Anthropic format
 	const content: any[] = [];
@@ -723,11 +746,23 @@ anthropic.openapi(messages, async (c) => {
 	// Handle tool calls
 	if (openaiResponse.choices?.[0]?.message?.tool_calls) {
 		for (const toolCall of openaiResponse.choices[0].message.tool_calls) {
+			let input: any;
+			try {
+				input = JSON.parse(toolCall.function.arguments || "{}");
+			} catch (err) {
+				logger.error("Failed to parse anthropic tool call arguments", {
+					err: err instanceof Error ? err : new Error(String(err)),
+					arguments: toolCall.function.arguments,
+				});
+				throw new HTTPException(500, {
+					message: "Failed to parse tool call arguments",
+				});
+			}
 			content.push({
 				type: "tool_use",
 				id: toolCall.id,
 				name: toolCall.function.name,
-				input: JSON.parse(toolCall.function.arguments || "{}"),
+				input,
 			});
 		}
 	}

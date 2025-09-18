@@ -383,8 +383,11 @@ chat.openapi(completions, async (c) => {
 		free_models_only,
 	} = validationResult.data;
 
-	// Extract and validate source from x-source header
-	const source = validateSource(c.req.header("x-source"));
+	// Extract and validate source from x-source header with HTTP-Referer fallback
+	const source = validateSource(
+		c.req.header("x-source"),
+		c.req.header("HTTP-Referer"),
+	);
 
 	// Check if debug mode is enabled via x-debug header
 	const debugMode =
@@ -624,6 +627,13 @@ chat.openapi(completions, async (c) => {
 	if (!project) {
 		throw new HTTPException(500, {
 			message: "Could not find project",
+		});
+	}
+
+	// Check if project is deleted (archived)
+	if (project.status === "deleted") {
+		throw new HTTPException(410, {
+			message: "Project has been archived and is no longer accessible",
 		});
 	}
 
@@ -1300,6 +1310,8 @@ chat.openapi(completions, async (c) => {
 				await insertLog({
 					...baseLogEntry,
 					duration: 0, // No processing time for cached response
+					timeToFirstToken: null, // Not applicable for cached response
+					timeToFirstReasoningToken: null, // Not applicable for cached response
 					responseSize: JSON.stringify(cachedStreamingResponse).length,
 					content: fullContent || null,
 					reasoningContent: fullReasoningContent || null,
@@ -1388,6 +1400,8 @@ chat.openapi(completions, async (c) => {
 				await insertLog({
 					...baseLogEntry,
 					duration,
+					timeToFirstToken: null, // Not applicable for cached response
+					timeToFirstReasoningToken: null, // Not applicable for cached response
 					responseSize: JSON.stringify(cachedResponse).length,
 					content: cachedResponse.choices?.[0]?.message?.content || null,
 					reasoningContent:
@@ -1514,6 +1528,12 @@ chat.openapi(completions, async (c) => {
 			}> = [];
 			const streamStartTime = Date.now();
 
+			// Timing tracking variables
+			let timeToFirstToken: number | null = null;
+			let timeToFirstReasoningToken: number | null = null;
+			let firstTokenReceived = false;
+			let firstReasoningTokenReceived = false;
+
 			// Helper function to write SSE and capture for cache
 			const writeSSEAndCache = async (sseData: {
 				data: string;
@@ -1600,6 +1620,8 @@ chat.openapi(completions, async (c) => {
 					await insertLog({
 						...baseLogEntry,
 						duration: Date.now() - startTime,
+						timeToFirstToken: null, // Not applicable for canceled request
+						timeToFirstReasoningToken: null, // Not applicable for canceled request
 						responseSize: 0,
 						content: null,
 						reasoningContent: null,
@@ -1723,6 +1745,8 @@ chat.openapi(completions, async (c) => {
 				await insertLog({
 					...baseLogEntry,
 					duration: Date.now() - startTime,
+					timeToFirstToken: null, // Not applicable for error case
+					timeToFirstReasoningToken: null, // Not applicable for error case
 					responseSize: errorResponseText.length,
 					content: null,
 					reasoningContent: null,
@@ -2164,6 +2188,12 @@ chat.openapi(completions, async (c) => {
 							const contentChunk = extractContent(data, usedProvider);
 							if (contentChunk) {
 								fullContent += contentChunk;
+
+								// Track time to first token if this is the first content chunk
+								if (!firstTokenReceived) {
+									timeToFirstToken = Date.now() - startTime;
+									firstTokenReceived = true;
+								}
 							}
 
 							// Extract reasoning content for logging using helper function
@@ -2173,6 +2203,12 @@ chat.openapi(completions, async (c) => {
 							);
 							if (reasoningContentChunk) {
 								fullReasoningContent += reasoningContentChunk;
+
+								// Track time to first reasoning token if this is the first reasoning chunk
+								if (!firstReasoningTokenReceived) {
+									timeToFirstReasoningToken = Date.now() - startTime;
+									firstReasoningTokenReceived = true;
+								}
 							}
 
 							// Extract and accumulate tool calls
@@ -2219,7 +2255,23 @@ chat.openapi(completions, async (c) => {
 							switch (usedProvider) {
 								case "google-ai-studio":
 									if (data.candidates?.[0]?.finishReason) {
-										finishReason = data.candidates[0].finishReason;
+										const googleFinishReason = data.candidates[0].finishReason;
+										// Check if there are function calls in this response
+										const hasFunctionCalls =
+											data.candidates?.[0]?.content?.parts?.some(
+												(part: any) => part.functionCall,
+											);
+										// Map Google finish reasons to OpenAI format
+										finishReason =
+											googleFinishReason === "STOP"
+												? hasFunctionCalls
+													? "tool_calls"
+													: "stop"
+												: googleFinishReason === "MAX_TOKENS"
+													? "length"
+													: googleFinishReason === "SAFETY"
+														? "content_filter"
+														: "stop"; // Safe fallback for unknown reasons
 									}
 									break;
 								case "anthropic":
@@ -2526,6 +2578,8 @@ chat.openapi(completions, async (c) => {
 				await insertLog({
 					...baseLogEntry,
 					duration,
+					timeToFirstToken,
+					timeToFirstReasoningToken,
 					responseSize: fullContent.length,
 					content: fullContent,
 					reasoningContent: fullReasoningContent || null,
@@ -2663,6 +2717,8 @@ chat.openapi(completions, async (c) => {
 		await insertLog({
 			...baseLogEntry,
 			duration,
+			timeToFirstToken: null, // Not applicable for canceled request
+			timeToFirstReasoningToken: null, // Not applicable for canceled request
 			responseSize: 0,
 			content: null,
 			reasoningContent: null,
@@ -2743,6 +2799,8 @@ chat.openapi(completions, async (c) => {
 		await insertLog({
 			...baseLogEntry,
 			duration,
+			timeToFirstToken: null, // Not applicable for error case
+			timeToFirstReasoningToken: null, // Not applicable for error case
 			responseSize: errorResponseText.length,
 			content: null,
 			reasoningContent: null,
@@ -2917,6 +2975,8 @@ chat.openapi(completions, async (c) => {
 	await insertLog({
 		...baseLogEntry,
 		duration,
+		timeToFirstToken: null, // Not applicable for non-streaming requests
+		timeToFirstReasoningToken: null, // Not applicable for non-streaming requests
 		responseSize: responseText.length,
 		content: content,
 		reasoningContent: reasoningContent,
