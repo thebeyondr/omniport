@@ -37,40 +37,23 @@ curl -X POST https://api.llmgateway.io/v1/chat/completions \
 
 ## Development Setup
 
-1. Install dependencies:
+1. Install dependencies and set up the development environment:
 
    ```bash
-   pnpm install
+   pnpm i && pnpm run setup
    ```
 
-2. Start required services (PostgreSQL and Redis):
-
-   ```bash
-   docker compose up -d
-   ```
+   This will install all dependencies, start Docker services, sync the database schema, and seed initial data.
 
    **Note for WSL2 users**: Ensure Docker Desktop is running with WSL integration enabled.
 
-3. Build all packages:
-
-   ```bash
-   pnpm build
-   ```
-
-4. Set up the database:
-
-   ```bash
-   pnpm --filter db push
-   pnpm --filter db seed
-   ```
-
-5. Start development servers:
+2. Start development servers:
 
    ```bash
    pnpm dev
    ```
 
-6. Build for production:
+3. Build for production:
    ```bash
    pnpm build
    ```
