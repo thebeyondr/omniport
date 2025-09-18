@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Orbit } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 
@@ -12,7 +12,6 @@ import {
 	CardContent,
 	CardDescription,
 	CardHeader,
-	CardTitle,
 } from "@/lib/components/card";
 import { useApi } from "@/lib/fetch-client";
 import { extractOrgAndProjectFromPath } from "@/lib/navigation-utils";
@@ -65,13 +64,16 @@ export function ApiKeysClient({ initialData }: { initialData: ApiKey[] }) {
 					<div>
 						<h2 className="text-3xl font-bold tracking-tight">API Keys</h2>
 						<p className="text-muted-foreground">
-							Manage your API keys for accessing LLM Gateway
+							Create and manage API keys to authenticate requests to LLM Gateway
 						</p>
 					</div>
 					{selectedProject && (
 						<CreateApiKeyDialog selectedProject={selectedProject}>
-							<Button disabled={!selectedProject} className="w-full md:w-auto">
-								<Plus className="mr-2 h-4 w-4" />
+							<Button
+								disabled={!selectedProject}
+								className="cursor-pointer flex items-center space-x-1 w-full md:w-auto"
+							>
+								<Orbit className=" h-4 w-4 mt-0.5" />
 								Create API Key
 							</Button>
 						</CreateApiKeyDialog>
@@ -80,9 +82,8 @@ export function ApiKeysClient({ initialData }: { initialData: ApiKey[] }) {
 				<div className="space-y-4">
 					{/* Desktop Card */}
 					<div className="hidden md:block">
-						<Card>
+						<Card className="gap-0">
 							<CardHeader>
-								<CardTitle>Keys</CardTitle>
 								<CardDescription>
 									{!selectedProject && (
 										<span className="text-amber-600">
