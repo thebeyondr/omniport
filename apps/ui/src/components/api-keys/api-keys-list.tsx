@@ -7,7 +7,7 @@ import {
 	Shield,
 	Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
@@ -118,20 +118,6 @@ export function ApiKeysList({
 		"/keys/api/limit/{id}",
 	);
 
-	// Show message if no project is selected
-	if (!selectedProject) {
-		return (
-			<div className="flex flex-col items-center justify-center py-16 text-muted-foreground text-center">
-				<div className="mb-4">
-					<KeyIcon className="h-10 w-10 text-gray-500" />
-				</div>
-				<p className="text-gray-400 mb-6">
-					Please select a project to view API keys.
-				</p>
-			</div>
-		);
-	}
-
 	const allKeys = data?.apiKeys.filter((key) => key.status !== "deleted") || [];
 	const activeKeys = allKeys.filter((key) => key.status === "active");
 	const inactiveKeys = allKeys.filter((key) => key.status === "inactive");
@@ -147,6 +133,39 @@ export function ApiKeysList({
 				return allKeys;
 		}
 	})();
+
+	// Auto-switch to a tab with content if current tab becomes empty
+	useEffect(() => {
+		if (filteredKeys.length === 0 && allKeys.length > 0) {
+			if (statusFilter === "active" && inactiveKeys.length > 0) {
+				setStatusFilter("inactive");
+			} else if (statusFilter === "inactive" && activeKeys.length > 0) {
+				setStatusFilter("active");
+			} else if (statusFilter !== "all") {
+				setStatusFilter("all");
+			}
+		}
+	}, [
+		filteredKeys.length,
+		allKeys.length,
+		activeKeys.length,
+		inactiveKeys.length,
+		statusFilter,
+	]);
+
+	// Show message if no project is selected
+	if (!selectedProject) {
+		return (
+			<div className="flex flex-col items-center justify-center py-16 text-muted-foreground text-center">
+				<div className="mb-4">
+					<KeyIcon className="h-10 w-10 text-gray-500" />
+				</div>
+				<p className="text-gray-400 mb-6">
+					Please select a project to view API keys.
+				</p>
+			</div>
+		);
+	}
 
 	// Handle loading state
 	if (isLoading) {
@@ -292,6 +311,9 @@ export function ApiKeysList({
 				},
 			);
 		});
+
+		// Switch to active tab to show the results
+		setStatusFilter("active");
 
 		toast({
 			title: "Activating Keys",
