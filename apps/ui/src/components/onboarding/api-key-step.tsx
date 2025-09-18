@@ -249,7 +249,7 @@ export function ApiKeyStep() {
 																<TooltipProvider>
 																	<Tooltip>
 																		<TooltipTrigger asChild>
-																			<span className="text-muted-foreground cursor-help">
+																			<span className="text-muted-foreground cursor-help border-b border-dotted border-muted-foreground/50 hover:border-muted-foreground">
 																				{Intl.DateTimeFormat(undefined, {
 																					month: "short",
 																					day: "numeric",
