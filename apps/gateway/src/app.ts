@@ -9,6 +9,7 @@ import { z } from "zod";
 import { redisClient } from "@llmgateway/cache";
 import { db } from "@llmgateway/db";
 import { logger } from "@llmgateway/logger";
+import { HealthChecker } from "@llmgateway/shared";
 
 import { anthropic } from "./anthropic/anthropic.js";
 import { chat } from "./chat/chat.js";
@@ -174,54 +175,22 @@ app.openapi(root, async (c) => {
 		? skip.split(",").map((s) => s.trim().toLowerCase())
 		: [];
 
-	const health = {
-		status: "ok",
-		redis: { connected: false, error: undefined as string | undefined },
-		database: { connected: false, error: undefined as string | undefined },
-	};
+	const TIMEOUT_MS = Number(process.env.TIMEOUT_MS) || 5000;
 
-	if (!skipChecks.includes("redis")) {
-		try {
-			await redisClient.ping();
-			health.redis.connected = true;
-		} catch (error) {
-			health.status = "error";
-			health.redis.error = "Redis connection failed";
-			logger.error(
-				"Redis healthcheck failed",
-				error instanceof Error ? error : new Error(String(error)),
-			);
-		}
-	} else {
-		health.redis.connected = true;
-	}
+	const healthChecker = new HealthChecker({
+		redisClient,
+		db,
+		logger,
+	});
 
-	if (!skipChecks.includes("database")) {
-		try {
-			await db.query.user.findFirst({});
-			health.database.connected = true;
-		} catch (error) {
-			health.status = "error";
-			health.database.error = "Database connection failed";
-			logger.error(
-				"Database healthcheck failed",
-				error instanceof Error ? error : new Error(String(error)),
-			);
-		}
-	} else {
-		health.database.connected = true;
-	}
+	const health = await healthChecker.performHealthChecks({
+		skipChecks,
+		timeoutMs: TIMEOUT_MS,
+	});
 
-	const statusCode = health.status === "error" ? 503 : 200;
+	const { response, statusCode } = healthChecker.createHealthResponse(health);
 
-	return c.json(
-		{
-			message: "OK",
-			version: process.env.APP_VERSION || "v0.0.0-unknown",
-			health,
-		},
-		statusCode,
-	);
+	return c.json(response, statusCode as 200 | 503);
 });
 
 const v1 = new OpenAPIHono<ServerTypes>();
