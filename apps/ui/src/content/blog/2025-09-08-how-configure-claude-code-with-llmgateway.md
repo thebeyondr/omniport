@@ -16,9 +16,9 @@ Claude Code is a powerful CLI tool that can be configured to use any LLM model t
 
 ## Why Use LLMGateway with Claude Code?
 
+- **Cost Savings**: Get 50% off for a limited time!
 - **Model Diversity**: Access models from OpenAI, Google, Cohere, and more
 - **Cost Optimization**: Choose the most cost-effective model for your tasks
-- **Tool Calling**: Use models that support function calling and tool use
 - **Unified Interface**: Single configuration for all providers
 
 ## Configuration
@@ -28,7 +28,8 @@ Set these environment variables to configure Claude Code with LLMGateway:
 ```bash
 export ANTHROPIC_BASE_URL=https://api.llmgateway.io
 export ANTHROPIC_AUTH_TOKEN=llmgtwy_.... # your llmgateway.io api key here
-export ANTHROPIC_MODEL=glm-4.5v # choose your model on llmgateway which supports tool calls
+# optionally, choose your model, otherwise it will use the default Claude model via LLMGateway
+export ANTHROPIC_MODEL=gpt-5 # choose your model on llmgateway which supports tool calls
 ```
 
 ### Getting Your API Key
