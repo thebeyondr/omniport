@@ -192,10 +192,11 @@ export const xaiModels = [
 				modelName: "grok-4-fast-reasoning",
 				inputPrice: 0.4 / 1e6, // <128k tokens: $0.20/1M, ≥128k tokens: $0.40/1M
 				outputPrice: 1.0 / 1e6, // <128k tokens: $0.50/1M, ≥128k tokens: $1.00/1M
+				cachedInputPrice: 0.05 / 1e6,
 				requestPrice: 0,
 				imageInputPrice: undefined,
-				contextSize: 256000,
-				maxOutput: 256000,
+				contextSize: 2_000_000,
+				maxOutput: undefined,
 				streaming: true,
 				vision: true,
 				tools: true,
@@ -213,12 +214,13 @@ export const xaiModels = [
 			{
 				providerId: "xai",
 				modelName: "grok-4-fast-non-reasoning",
-				inputPrice: 0.4 / 1e6,
+				inputPrice: 0.4 / 1e6, // <128k tokens: $0.20/1M, ≥128k tokens: $0.40/1M
 				outputPrice: 1.0 / 1e6, // <128k tokens: $0.50/1M, ≥128k tokens: $1.00/1M
+				cachedInputPrice: 0.05 / 1e6,
 				requestPrice: 0,
 				imageInputPrice: undefined,
-				contextSize: 256000,
-				maxOutput: 256000,
+				contextSize: 2_000_000,
+				maxOutput: undefined,
 				streaming: true,
 				vision: true,
 				tools: true,
