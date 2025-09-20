@@ -26,8 +26,13 @@ Optimized for fast reasoning tasks with excellent performance:
 
 **Pricing**:
 
-- **Input**: $0.20 per 1M tokens
-- **Output**: $0.50 per 1M tokens
+We're working on dynamic pricing, so these will be the prices by then:
+
+- **Input tokens (<128k)**: $0.20 per 1M tokens
+- **Input tokens (≥128k)**: $0.40 per 1M tokens
+- **Output tokens (<128k)**: $0.50 per 1M tokens
+- **Output tokens (≥128k)**: $1.00 per 1M tokens
+- **Cached input tokens**: $0.05 per 1M tokens
 
 **Features**: Vision support, streaming, tool usage, JSON output
 
@@ -46,8 +51,13 @@ High-speed model optimized for general tasks without complex reasoning:
 
 **Pricing**:
 
-- **Input**: $0.20 per 1M tokens
-- **Output**: $0.50 per 1M tokens
+We're working on dynamic pricing, so these will be the prices by then:
+
+- **Input tokens (<128k)**: $0.20 per 1M tokens
+- **Input tokens (≥128k)**: $0.40 per 1M tokens
+- **Output tokens (<128k)**: $0.50 per 1M tokens
+- **Output tokens (≥128k)**: $1.00 per 1M tokens
+- **Cached input tokens**: $0.05 per 1M tokens
 
 **Features**: Vision support, streaming, tool usage, JSON output
 
