@@ -77,7 +77,9 @@ export function calculateCosts(
 			} else if (fullOutput.prompt) {
 				// For text prompt
 				try {
-					calculatedPromptTokens = encode(fullOutput.prompt).length;
+					calculatedPromptTokens = encode(
+						JSON.stringify(fullOutput.prompt),
+					).length;
 				} catch (error) {
 					// If encoding fails, leave as null
 					logger.error(`Failed to encode prompt text: ${error}`);
@@ -88,7 +90,9 @@ export function calculateCosts(
 		// Calculate completion tokens
 		if (!completionTokens && fullOutput && fullOutput.completion) {
 			try {
-				calculatedCompletionTokens = encode(fullOutput.completion).length;
+				calculatedCompletionTokens = encode(
+					JSON.stringify(fullOutput.completion),
+				).length;
 			} catch (error) {
 				// If encoding fails, leave as null
 				logger.error(`Failed to encode completion text: ${error}`);
