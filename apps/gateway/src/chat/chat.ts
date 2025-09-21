@@ -9,21 +9,21 @@ import { throwIamException, validateModelAccess } from "@/lib/iam.js";
 import { insertLog } from "@/lib/logs.js";
 
 import {
-	checkCustomProviderExists,
 	generateCacheKey,
 	generateStreamingCacheKey,
 	getCache,
-	getCustomProviderKey,
-	getOrganization,
-	getProject,
-	getProviderKey,
 	getStreamingCache,
-	isCachingEnabled,
 	setCache,
 	setStreamingCache,
 } from "@llmgateway/cache";
 import {
-	db,
+	cdb as db,
+	checkCustomProviderExists,
+	getCustomProviderKey,
+	getOrganization,
+	getProject,
+	getProviderKey,
+	isCachingEnabled,
 	type InferSelectModel,
 	shortid,
 	type tables,
