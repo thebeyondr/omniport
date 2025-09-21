@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { consumeFromQueue, LOG_QUEUE } from "@llmgateway/cache";
 import {
-	cdb as db,
+	db,
 	log,
 	organization,
 	eq,
