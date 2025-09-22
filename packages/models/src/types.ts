@@ -8,6 +8,9 @@ import type { ProviderId } from "./providers.js";
 export interface TextContent {
 	type: "text";
 	text: string;
+	cache_control?: {
+		type: "ephemeral";
+	};
 }
 
 export interface ImageUrlContent {
@@ -253,6 +256,7 @@ export interface ModelWithPricing {
 		outputPrice?: number;
 		supportedParameters?: string[];
 		modelName: string;
+		discount?: number;
 	}>;
 }
 
