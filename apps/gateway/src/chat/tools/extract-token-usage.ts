@@ -9,7 +9,6 @@ export function extractTokenUsage(
 	data: any,
 	provider: Provider,
 	fullContent?: string,
-	usedModel?: string,
 ) {
 	let promptTokens = null;
 	let completionTokens = null;

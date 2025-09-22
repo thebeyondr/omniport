@@ -10,7 +10,6 @@ export function parseProviderResponse(
 	usedProvider: Provider,
 	json: any,
 	messages: any[] = [],
-	usedModel?: string,
 ) {
 	let content = null;
 	let reasoningContent = null;
