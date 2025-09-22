@@ -2647,6 +2647,7 @@ chat.openapi(completions, async (c) => {
 					{
 						prompt: messages.map((m) => m.content).join("\n"),
 						completion: fullContent,
+						toolResults: streamingToolCalls || undefined,
 					},
 				);
 
@@ -3033,6 +3034,7 @@ chat.openapi(completions, async (c) => {
 		{
 			prompt: messages.map((m) => m.content).join("\n"),
 			completion: content,
+			toolResults: toolResults,
 		},
 	);
 
