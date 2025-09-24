@@ -6,13 +6,9 @@ jobs:
   autofix:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-      pull-requests: write
-
     steps:
       - name: Autofix
         uses: steebchen/actions/autofix@v0.14.1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
           format-command: pnpm generate && pnpm format
