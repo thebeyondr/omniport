@@ -6,12 +6,16 @@ import { usePostHog } from "posthog-js/react";
 import * as React from "react";
 import { useState } from "react";
 
-import { Card, CardContent } from "@/lib/components/card";
+import {
+	NavigationMenu,
+	NavigationMenuItem,
+	NavigationMenuList,
+} from "@/lib/components/navigation-menu";
 import { Stepper } from "@/lib/components/stepper";
 import { useApi } from "@/lib/fetch-client";
+import Logo from "@/lib/icons/Logo";
 import { useStripe } from "@/lib/stripe";
 
-import { ApiKeyStep } from "./api-key-step";
 import { CreditsStep } from "./credits-step";
 import { PlanChoiceStep } from "./plan-choice-step";
 import { ProviderKeyStep } from "./provider-key-step";
@@ -27,16 +31,12 @@ const getSteps = (flowType: FlowType) => [
 	},
 	{
 		id: "referral",
-		title: "How did you hear about us?",
+		title: "How did you find us?",
 		optional: true,
 	},
 	{
-		id: "api-key",
-		title: "API Key",
-	},
-	{
 		id: "plan-choice",
-		title: "Choose Plan",
+		title: "Choose your approach",
 	},
 	{
 		id: flowType === "credits" ? "credits" : "provider-key",
@@ -48,10 +48,12 @@ const getSteps = (flowType: FlowType) => [
 export function OnboardingWizard() {
 	const [activeStep, setActiveStep] = useState(0);
 	const [flowType, setFlowType] = useState<FlowType>(null);
-	const [hasSelectedPlan, setHasSelectedPlan] = useState(false);
+	const [hasSelectedPlan, setHasSelectedPlan] = useState(true); // Free plan is selected by default
+	const [selectedPlanName, setSelectedPlanName] = useState<string>("Free Plan"); // Free plan is default
 	const [isPaymentSuccessful, setIsPaymentSuccessful] = useState(false);
 	const [referralSource, setReferralSource] = useState<string>("");
 	const [referralDetails, setReferralDetails] = useState<string>("");
+
 	const router = useRouter();
 	const posthog = usePostHog();
 	const { stripe, isLoading: stripeLoading } = useStripe();
@@ -65,10 +67,16 @@ export function OnboardingWizard() {
 	const STEPS = getSteps(flowType);
 
 	const handleStepChange = async (step: number) => {
-		// Special handling for plan choice step (now at index 3)
-		if (activeStep === 3) {
-			if (!hasSelectedPlan) {
-				// Skip to dashboard if no plan selected
+		// Handle backward navigation
+		if (step < activeStep) {
+			setActiveStep(step);
+			return;
+		}
+
+		// Special handling for plan choice step (now at index 2)
+		if (activeStep === 2) {
+			if (!hasSelectedPlan || flowType === null) {
+				// Skip to dashboard if no plan selected or if continuing with free plan
 				posthog.capture("onboarding_skipped", {
 					skippedAt: "plan_choice",
 					referralSource: referralSource || "not_provided",
@@ -103,13 +111,15 @@ export function OnboardingWizard() {
 	const handleSelectCredits = () => {
 		setFlowType("credits");
 		setHasSelectedPlan(true);
-		setActiveStep(4);
+		setSelectedPlanName("Buy Credits");
+		setActiveStep(3);
 	};
 
 	const handleSelectBYOK = () => {
 		setFlowType("byok");
 		setHasSelectedPlan(true);
-		setActiveStep(4);
+		setSelectedPlanName("Bring Your Own Keys");
+		setActiveStep(3);
 	};
 
 	const handleReferralComplete = (source: string, details?: string) => {
@@ -117,12 +127,12 @@ export function OnboardingWizard() {
 		if (details) {
 			setReferralDetails(details);
 		}
-		setActiveStep(2); // Move to API Key step
+		setActiveStep(2); // Move to Plan Choice step
 	};
 
 	// Special handling for PlanChoiceStep to pass callbacks
 	const renderCurrentStep = () => {
-		if (activeStep === 3) {
+		if (activeStep === 2) {
 			return (
 				<PlanChoiceStep
 					onSelectCredits={handleSelectCredits}
@@ -133,7 +143,7 @@ export function OnboardingWizard() {
 		}
 
 		// For credits step, wrap with Stripe Elements
-		if (activeStep === 4 && flowType === "credits") {
+		if (activeStep === 3 && flowType === "credits") {
 			return stripeLoading ? (
 				<div className="p-6 text-center">Loading payment form...</div>
 			) : (
@@ -144,7 +154,7 @@ export function OnboardingWizard() {
 		}
 
 		// For BYOK step
-		if (activeStep === 4 && flowType === "byok") {
+		if (activeStep === 3 && flowType === "byok") {
 			return <ProviderKeyStep />;
 		}
 
@@ -157,10 +167,6 @@ export function OnboardingWizard() {
 			return <ReferralStep onComplete={handleReferralComplete} />;
 		}
 
-		if (activeStep === 2) {
-			return <ApiKeyStep />;
-		}
-
 		return null;
 	};
 
@@ -168,13 +174,22 @@ export function OnboardingWizard() {
 	const getStepperSteps = () => {
 		return STEPS.map((step, index) => ({
 			...step,
-			// Make plan choice step show Skip when no selection
-			...(index === 3 &&
-				!hasSelectedPlan && {
-					customNextText: "Skip",
-				}),
+			// Welcome step shows dynamic text based on user state
+			...(index === 0 && {
+				customNextText: "Next: How did you hear about us?",
+			}),
+			// Referral step shows dynamic text based on user state
+			...(index === 1 && {
+				customNextText: "Next: Choose your approach",
+			}),
+			// Make plan choice step show dynamic text based on selected plan
+			...(index === 2 && {
+				customNextText: hasSelectedPlan
+					? `Continue with ${selectedPlanName}`
+					: "Skip",
+			}),
 			// Remove optional status from credits step when payment is successful
-			...(index === 4 &&
+			...(index === 3 &&
 				flowType === "credits" &&
 				isPaymentSuccessful && {
 					optional: false,
@@ -183,22 +198,31 @@ export function OnboardingWizard() {
 	};
 
 	return (
-		<div className="container mx-auto max-w-3xl py-10">
-			<Card>
-				<CardContent className="p-6 sm:p-8">
-					<Stepper
-						steps={getStepperSteps()}
-						activeStep={activeStep}
-						onStepChange={handleStepChange}
-						className="mb-6"
-						nextButtonDisabled={
-							activeStep === 4 && flowType === "credits" && !isPaymentSuccessful
-						}
-					>
-						{renderCurrentStep()}
-					</Stepper>
-				</CardContent>
-			</Card>
+		<div className="container mx-auto px-4 py-10">
+			<NavigationMenu className="mx-auto">
+				<NavigationMenuList>
+					<NavigationMenuItem asChild>
+						<div className="flex items-center space-x-2">
+							<Logo className="h-8 w-8 rounded-full text-black dark:text-white" />
+							<span className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">
+								LLM Gateway
+							</span>
+						</div>
+					</NavigationMenuItem>
+				</NavigationMenuList>
+			</NavigationMenu>
+
+			<Stepper
+				steps={getStepperSteps()}
+				activeStep={activeStep}
+				onStepChange={handleStepChange}
+				className="mb-6"
+				nextButtonDisabled={
+					activeStep === 3 && flowType === "credits" && !isPaymentSuccessful
+				}
+			>
+				{renderCurrentStep()}
+			</Stepper>
 		</div>
 	);
 }
