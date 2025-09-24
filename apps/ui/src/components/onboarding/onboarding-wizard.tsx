@@ -176,7 +176,7 @@ export function OnboardingWizard() {
 			...step,
 			// Welcome step shows dynamic text based on user state
 			...(index === 0 && {
-				customNextText: "Next: How did you hear about us?",
+				customNextText: "Next: How did you find us?",
 			}),
 			// Referral step shows dynamic text based on user state
 			...(index === 1 && {
