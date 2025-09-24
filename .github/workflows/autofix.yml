@@ -6,7 +6,9 @@ jobs:
   autofix:
     runs-on: ubuntu-latest
 
-    if: ${{ github.actor == 'steebchen' || github.actor == 'smakosh' }}
+    permissions:
+      contents: write
+      pull-requests: write
 
     steps:
       - name: Autofix
