@@ -9,6 +9,7 @@ export const anthropicModels = [
 		deactivatedAt: undefined,
 		providers: [
 			{
+				test: "skip",
 				providerId: "anthropic",
 				modelName: "claude-3-7-sonnet-latest",
 				inputPrice: 3.0 / 1e6,
@@ -49,7 +50,7 @@ export const anthropicModels = [
 				inputPrice: 0.8 / 1e6,
 				outputPrice: 4.0 / 1e6,
 				cachedInputPrice: 0.08 / 1e6,
-				discount: parseFloat(process.env.ROUTEWAY_PAID_DISCOUNT || "1"),
+				discount: 0.5,
 				requestPrice: 0,
 				contextSize: 200000,
 				maxOutput: 8192,
@@ -86,7 +87,7 @@ export const anthropicModels = [
 				inputPrice: 3.0 / 1e6,
 				outputPrice: 15.0 / 1e6,
 				cachedInputPrice: 0.3 / 1e6,
-				discount: parseFloat(process.env.ROUTEWAY_PAID_DISCOUNT || "1"),
+				discount: 0.5,
 				requestPrice: 0,
 				contextSize: 200000,
 				maxOutput: 8192,
@@ -103,7 +104,7 @@ export const anthropicModels = [
 		name: "Claude 3.5 Sonnet (2024-10-22)",
 		family: "anthropic",
 		deprecatedAt: undefined,
-		deactivatedAt: undefined,
+		deactivatedAt: new Date("2025-10-22T00:00:00Z"),
 		providers: [
 			{
 				providerId: "anthropic",
@@ -149,6 +150,7 @@ export const anthropicModels = [
 		deactivatedAt: undefined,
 		providers: [
 			{
+				test: "skip",
 				providerId: "anthropic",
 				modelName: "claude-sonnet-4-20250514",
 				inputPrice: 3.0 / 1e6,
@@ -162,12 +164,13 @@ export const anthropicModels = [
 				tools: true,
 			},
 			{
+				test: "skip",
 				providerId: "routeway-discount",
 				modelName: "claude-sonnet-4-20250514-v1:0",
 				inputPrice: 3.0 / 1e6,
 				outputPrice: 15.0 / 1e6,
 				cachedInputPrice: 0.3 / 1e6,
-				discount: parseFloat(process.env.ROUTEWAY_PAID_DISCOUNT || "1"),
+				discount: 0.5,
 				requestPrice: 0,
 				contextSize: 200000,
 				maxOutput: undefined,
@@ -187,6 +190,7 @@ export const anthropicModels = [
 		deactivatedAt: undefined,
 		providers: [
 			{
+				test: "skip",
 				providerId: "anthropic",
 				modelName: "claude-opus-4-20250514",
 				inputPrice: 15.0 / 1e6,
@@ -200,12 +204,13 @@ export const anthropicModels = [
 				tools: true,
 			},
 			{
+				test: "skip",
 				providerId: "routeway-discount",
 				modelName: "claude-opus-4-20250514-v1:0",
 				inputPrice: 15.0 / 1e6,
 				outputPrice: 75.0 / 1e6,
 				cachedInputPrice: 1.5 / 1e6,
-				discount: parseFloat(process.env.ROUTEWAY_PAID_DISCOUNT || "1"),
+				discount: 0.5,
 				requestPrice: 0,
 				contextSize: 200000,
 				maxOutput: undefined,
@@ -225,6 +230,7 @@ export const anthropicModels = [
 		deactivatedAt: undefined,
 		providers: [
 			{
+				test: "skip",
 				providerId: "anthropic",
 				modelName: "claude-opus-4-1-20250805",
 				inputPrice: 15.0 / 1e6,
@@ -239,12 +245,13 @@ export const anthropicModels = [
 				tools: true,
 			},
 			{
+				test: "skip",
 				providerId: "routeway-discount",
 				modelName: "claude-opus-4-1-20250805-v1:0",
 				inputPrice: 15.0 / 1e6,
 				outputPrice: 75.0 / 1e6,
 				cachedInputPrice: 1.5 / 1e6,
-				discount: parseFloat(process.env.ROUTEWAY_PAID_DISCOUNT || "1"),
+				discount: 0.5,
 				requestPrice: 0,
 				contextSize: 200000,
 				maxOutput: 32000,
@@ -264,6 +271,7 @@ export const anthropicModels = [
 		deactivatedAt: undefined,
 		providers: [
 			{
+				test: "skip",
 				providerId: "anthropic",
 				modelName: "claude-3-5-sonnet-20240620",
 				inputPrice: 3.0 / 1e6,
@@ -286,6 +294,7 @@ export const anthropicModels = [
 		deactivatedAt: undefined,
 		providers: [
 			{
+				test: "skip",
 				providerId: "anthropic",
 				modelName: "claude-3-5-sonnet-latest",
 				inputPrice: 3.0 / 1e6,
@@ -330,6 +339,7 @@ export const anthropicModels = [
 		deactivatedAt: undefined,
 		providers: [
 			{
+				test: "skip",
 				providerId: "anthropic",
 				modelName: "claude-3-opus-20240229",
 				inputPrice: 15.0 / 1e6,
