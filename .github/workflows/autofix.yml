@@ -14,5 +14,5 @@ jobs:
       - name: Autofix
         uses: steebchen/actions/autofix@v0.14.1
         with:
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           format-command: pnpm generate && pnpm format
