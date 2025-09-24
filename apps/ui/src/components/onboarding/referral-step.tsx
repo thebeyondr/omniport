@@ -1,14 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { Button } from "@/lib/components/button";
-import {
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-} from "@/lib/components/card";
+import { Card, CardContent } from "@/lib/components/card";
 import { Input } from "@/lib/components/input";
 import { Label } from "@/lib/components/label";
 import { RadioGroup, RadioGroupItem } from "@/lib/components/radio-group";
@@ -20,6 +14,12 @@ interface ReferralStepProps {
 export function ReferralStep({ onComplete }: ReferralStepProps) {
 	const [selectedSource, setSelectedSource] = useState<string>("");
 	const [otherDetails, setOtherDetails] = useState<string>("");
+	const onCompleteRef = useRef(onComplete);
+
+	// Keep the ref updated with the latest onComplete function
+	useEffect(() => {
+		onCompleteRef.current = onComplete;
+	}, [onComplete]);
 
 	const referralSources = [
 		{ value: "twitter", label: "X (Formerly Twitter)" },
@@ -30,33 +30,45 @@ export function ReferralStep({ onComplete }: ReferralStepProps) {
 		{ value: "other", label: "Other (Specify)" },
 	];
 
-	const handleContinue = () => {
-		if (selectedSource) {
-			const details = selectedSource === "other" ? otherDetails : undefined;
-			onComplete?.(selectedSource, details);
+	// Handle completion when a source is selected or manually triggered
+	useEffect(() => {
+		if (selectedSource && selectedSource !== "other") {
+			// Auto-complete for non-"other" selections after a brief delay
+			const timer = setTimeout(() => {
+				onCompleteRef.current?.(selectedSource);
+			}, 1000); // Increased delay to give users time to change their mind
+			return () => clearTimeout(timer);
 		}
-	};
+		// Return empty cleanup function if condition is not met
+		return () => {};
+	}, [selectedSource]);
 
-	const handleSkip = () => {
-		onComplete?.("");
-	};
+	// Handle "other" completion when details are provided
+	useEffect(() => {
+		if (selectedSource === "other" && otherDetails.trim()) {
+			const timer = setTimeout(() => {
+				onCompleteRef.current?.(selectedSource, otherDetails);
+			}, 1500); // Longer delay for typing
+			return () => clearTimeout(timer);
+		}
+		// Return empty cleanup function if condition is not met
+		return () => {};
+	}, [selectedSource, otherDetails]);
 
 	return (
 		<div className="space-y-6">
 			<div className="text-center space-y-2">
-				<h2 className="text-2xl font-semibold tracking-tight">
-					How did you hear about us?
+				<h2 className="text-3xl font-semibold tracking-tight">
+					How did you find us?
 				</h2>
 				<p className="text-muted-foreground">
-					Help us understand how people discover LLM Gateway (Optional)
+					Help us improve by letting us know how you found us. No pressure - you
+					can skip this step.
 				</p>
 			</div>
 
 			<Card>
-				<CardHeader>
-					<CardTitle className="text-lg">Referral Source</CardTitle>
-				</CardHeader>
-				<CardContent className="space-y-4">
+				<CardContent className="pt-6 space-y-4">
 					<RadioGroup
 						value={selectedSource}
 						onValueChange={setSelectedSource}
@@ -82,31 +94,24 @@ export function ReferralStep({ onComplete }: ReferralStepProps) {
 							</Label>
 							<Input
 								id="other-details"
-								placeholder="Where did you hear about us?"
+								placeholder="Blog, conference, friend, etc..."
+								autoFocus
 								value={otherDetails}
 								onChange={(e) => setOtherDetails(e.target.value)}
 								className="w-full"
 							/>
 						</div>
 					)}
+
+					{selectedSource && (
+						<div className="text-sm text-muted-foreground text-center mt-4">
+							{selectedSource === "other" && !otherDetails.trim()
+								? "Please provide details above, or use the Next button to continue."
+								: "Thanks! Moving to the next step automatically..."}
+						</div>
+					)}
 				</CardContent>
 			</Card>
-
-			<div className="flex gap-3 pt-4">
-				<Button variant="outline" onClick={handleSkip} className="flex-1">
-					Skip
-				</Button>
-				<Button
-					onClick={handleContinue}
-					disabled={
-						!selectedSource ||
-						(selectedSource === "other" && !otherDetails.trim())
-					}
-					className="flex-1"
-				>
-					Continue
-				</Button>
-			</div>
 		</div>
 	);
 }
