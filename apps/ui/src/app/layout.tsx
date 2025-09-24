@@ -1,11 +1,24 @@
-// eslint-disable-next-line import/order
-import "./globals.css";
+import { Geist, Geist_Mono } from "next/font/google";
 
 import { Providers } from "@/components/providers";
 import { getConfig } from "@/lib/config-server";
 
+import "./globals.css";
+
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+
+const geistMono = Geist_Mono({
+	subsets: ["latin"],
+	weight: ["400", "500", "600", "700"],
+	variable: "--font-geist-mono",
+});
+
+const geist = Geist({
+	subsets: ["latin"],
+	weight: ["400", "500", "600", "700"],
+	variable: "--font-geist",
+});
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +52,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
 	return (
 		<html lang="en" suppressHydrationWarning>
-			<body className="min-h-screen font-sans antialiased">
+			<body
+				className={`min-h-screen font-sans antialiased ${geist.className} ${geistMono.variable}`}
+			>
 				<Providers config={config}>{children}</Providers>
 			</body>
 		</html>
