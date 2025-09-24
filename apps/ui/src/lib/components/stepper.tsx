@@ -36,7 +36,7 @@ export function Stepper({
 		<div className={cn("flex flex-col gap-8", className)}>
 			<div className="flex flex-col gap-4">
 				{/* Desktop stepper - show full horizontal layout */}
-				<div className="hidden md:flex flex-col gap-4">
+				<div className="hidden md:flex flex-col gap-4 w-full max-w-3xl mx-auto">
 					<Progress value={progress} className="h-2" />
 					<div className="flex justify-between">
 						{steps.map((step, index) => {
@@ -75,11 +75,6 @@ export function Stepper({
 									<span className="text-xs font-medium text-center">
 										{step.title}
 									</span>
-									{step.optional && (
-										<span className="text-xs text-muted-foreground text-center">
-											(Optional)
-										</span>
-									)}
 								</div>
 							);
 						})}
@@ -130,9 +125,16 @@ export function Stepper({
 				</div>
 			</div>
 
-			<div className="flex flex-col gap-6">{children}</div>
+			<div
+				className={cn(
+					"flex flex-col gap-6 w-full max-w-3xl mx-auto",
+					activeStep === 2 && "max-w-max",
+				)}
+			>
+				{children}
+			</div>
 
-			<div className="flex justify-between">
+			<div className="flex justify-between w-full max-w-3xl mx-auto">
 				<Button
 					variant="outline"
 					onClick={() => onStepChange(activeStep - 1)}
