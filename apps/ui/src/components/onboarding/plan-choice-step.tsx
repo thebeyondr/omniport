@@ -26,12 +26,14 @@ import { useAppConfig } from "@/lib/config";
 interface PlanChoiceStepProps {
 	onSelectCredits: () => void;
 	onSelectBYOK: () => void;
+	onSelectFreePlan: () => void;
 	hasSelectedPlan?: boolean;
 }
 
 export function PlanChoiceStep({
 	onSelectCredits,
 	onSelectBYOK,
+	onSelectFreePlan,
 }: PlanChoiceStepProps) {
 	const config = useAppConfig();
 	const { data: organization } = useDefaultOrganization();
@@ -59,7 +61,7 @@ export function PlanChoiceStep({
 			icon: Gift,
 			price: "$0",
 			period: "forever",
-			current: true,
+			current: false,
 			features: [
 				"Access to ALL models",
 				"Pay with credits",
@@ -68,9 +70,10 @@ export function PlanChoiceStep({
 				"Standard support",
 			],
 			color: "green",
-			buttonText: "Current Plan",
-			buttonVariant: "outline" as const,
-			buttonDisabled: true,
+			buttonText: "Choose Free Plan",
+			buttonVariant: "default" as const,
+			buttonDisabled: false,
+			onClick: onSelectFreePlan,
 		},
 		{
 			id: "credits",

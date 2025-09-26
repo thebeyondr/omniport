@@ -48,8 +48,8 @@ const getSteps = (flowType: FlowType) => [
 export function OnboardingWizard() {
 	const [activeStep, setActiveStep] = useState(0);
 	const [flowType, setFlowType] = useState<FlowType>(null);
-	const [hasSelectedPlan, setHasSelectedPlan] = useState(true); // Free plan is selected by default
-	const [selectedPlanName, setSelectedPlanName] = useState<string>("Free Plan"); // Free plan is default
+	const [hasSelectedPlan, setHasSelectedPlan] = useState(false);
+	const [selectedPlanName, setSelectedPlanName] = useState<string>("");
 	const [isPaymentSuccessful, setIsPaymentSuccessful] = useState(false);
 	const [referralSource, setReferralSource] = useState<string>("");
 	const [referralDetails, setReferralDetails] = useState<string>("");
@@ -75,8 +75,8 @@ export function OnboardingWizard() {
 
 		// Special handling for plan choice step (now at index 2)
 		if (activeStep === 2) {
-			if (!hasSelectedPlan || flowType === null) {
-				// Skip to dashboard if no plan selected or if continuing with free plan
+			if (!hasSelectedPlan) {
+				// Skip to dashboard if no plan selected
 				posthog.capture("onboarding_skipped", {
 					skippedAt: "plan_choice",
 					referralSource: referralSource || "not_provided",
@@ -122,6 +122,13 @@ export function OnboardingWizard() {
 		setActiveStep(3);
 	};
 
+	const handleSelectFreePlan = () => {
+		setHasSelectedPlan(true);
+		setSelectedPlanName("Free Plan");
+		// Continue to next step or complete onboarding
+		setActiveStep(3);
+	};
+
 	const handleReferralComplete = (source: string, details?: string) => {
 		setReferralSource(source);
 		if (details) {
@@ -137,6 +144,7 @@ export function OnboardingWizard() {
 				<PlanChoiceStep
 					onSelectCredits={handleSelectCredits}
 					onSelectBYOK={handleSelectBYOK}
+					onSelectFreePlan={handleSelectFreePlan}
 					hasSelectedPlan={hasSelectedPlan}
 				/>
 			);
