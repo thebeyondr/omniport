@@ -22,12 +22,12 @@ import {
 } from "@/lib/components/card";
 import { Step } from "@/lib/components/stepper";
 import { useAppConfig } from "@/lib/config";
+import { isSelfHostedEnvironment } from "@/lib/utils/self-host";
 
 interface PlanChoiceStepProps {
 	onSelectCredits: () => void;
 	onSelectBYOK: () => void;
 	onSelectFreePlan: () => void;
-	hasSelectedPlan?: boolean;
 }
 
 export function PlanChoiceStep({
@@ -42,15 +42,7 @@ export function PlanChoiceStep({
 
 	// Detect localhost/self-hosting
 	useEffect(() => {
-		if (typeof window !== "undefined") {
-			const hostname = window.location.hostname;
-			setIsLocalhost(
-				hostname === "localhost" ||
-					hostname === "127.0.0.1" ||
-					hostname.includes("192.168.") ||
-					hostname.includes("10.0."),
-			);
-		}
+		setIsLocalhost(isSelfHostedEnvironment());
 	}, []);
 
 	const plans = [
@@ -179,7 +171,9 @@ export function PlanChoiceStep({
 					<p className="text-muted-foreground">
 						{isLocalhost
 							? "You're self-hosting (detected) - explore all your options below, or skip to continue with what you have."
-							: "You're currently on the Free plan. Explore upgrade options below, or skip to continue building."}
+							: isProPlan
+								? "You're on the Pro plan. Explore additional options below, or skip to continue building."
+								: "You're currently on the Free plan. Explore upgrade options below, or skip to continue building."}
 					</p>
 				</div>
 			</div>
