@@ -1,16 +1,2 @@
 #!/usr/bin/env bash
-# Load fnm if available
-if command -v fnm >/dev/null 2>&1; then
-  eval "$(fnm env --shell bash)"
-elif [ -f ~/.local/share/fnm/fnm ]; then
-  eval "$(~/.local/share/fnm/fnm env --shell bash)"
-fi
-
-# Check if pnpm is available
-if ! command -v pnpm >/dev/null 2>&1; then
-  echo "Error: pnpm not found in PATH"
-  echo "Please install pnpm or add it to your PATH"
-  exit 1
-fi
-
 pnpm commitlint --edit "$1"
