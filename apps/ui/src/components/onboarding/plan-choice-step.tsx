@@ -7,7 +7,7 @@ import {
 	Key,
 	Lock,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import React from "react";
 
 import { UpgradeToProDialog } from "@/components/shared/upgrade-to-pro-dialog";
 import { useDefaultOrganization } from "@/hooks/useOrganization";
@@ -22,7 +22,6 @@ import {
 } from "@/lib/components/card";
 import { Step } from "@/lib/components/stepper";
 import { useAppConfig } from "@/lib/config";
-import { isSelfHostedEnvironment } from "@/lib/utils/self-host";
 
 interface PlanChoiceStepProps {
 	onSelectCredits: () => void;
@@ -38,12 +37,7 @@ export function PlanChoiceStep({
 	const config = useAppConfig();
 	const { data: organization } = useDefaultOrganization();
 	const isProPlan = organization?.plan === "pro";
-	const [isLocalhost, setIsLocalhost] = useState(false);
-
-	// Detect localhost/self-hosting
-	useEffect(() => {
-		setIsLocalhost(isSelfHostedEnvironment());
-	}, []);
+	const isLocalhost = !config.hosted;
 
 	const plans = [
 		{

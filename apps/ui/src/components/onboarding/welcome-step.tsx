@@ -9,8 +9,8 @@ import { useAuth } from "@/lib/auth-client";
 import { Button } from "@/lib/components/button";
 import { Step } from "@/lib/components/stepper";
 import { toast } from "@/lib/components/use-toast";
+import { useAppConfig } from "@/lib/config";
 import { useApi } from "@/lib/fetch-client";
-import { isSelfHostedEnvironment } from "@/lib/utils/self-host";
 
 export function WelcomeStep() {
 	const { useSession } = useAuth();
@@ -21,7 +21,8 @@ export function WelcomeStep() {
 	const queryClient = useQueryClient();
 	const router = useRouter();
 	const [apiKey, setApiKey] = useState<string | null>(null);
-	const [isLocalhost, setIsLocalhost] = useState(false);
+	const config = useAppConfig();
+	const isLocalhost = !config.hosted;
 
 	const createApiKeyMutation = api.useMutation("post", "/keys/api");
 	const completeOnboarding = api.useMutation(
@@ -45,11 +46,6 @@ export function WelcomeStep() {
 			refetchOnMount: true,
 		},
 	);
-
-	// Detect localhost/self-hosting
-	useEffect(() => {
-		setIsLocalhost(isSelfHostedEnvironment());
-	}, []);
 
 	// Refetch API keys when component mounts to get fresh data
 	useEffect(() => {
