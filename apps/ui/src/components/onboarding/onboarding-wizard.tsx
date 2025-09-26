@@ -150,7 +150,6 @@ export function OnboardingWizard() {
 					onSelectCredits={handleSelectCredits}
 					onSelectBYOK={handleSelectBYOK}
 					onSelectFreePlan={handleSelectFreePlan}
-					hasSelectedPlan={hasSelectedPlan}
 				/>
 			);
 		}
