@@ -22,7 +22,7 @@ import { ProviderKeyStep } from "./provider-key-step";
 import { ReferralStep } from "./referral-step";
 import { WelcomeStep } from "./welcome-step";
 
-type FlowType = "credits" | "byok" | null;
+type FlowType = "credits" | "byok" | "free" | null;
 
 const getSteps = (flowType: FlowType) => [
 	{
@@ -127,11 +127,28 @@ export function OnboardingWizard() {
 		setActiveStep(3);
 	};
 
-	const handleSelectFreePlan = () => {
+	const handleSelectFreePlan = async () => {
 		setHasSelectedPlan(true);
 		setSelectedPlanName("Free Plan");
-		// Continue to next step or complete onboarding
-		setActiveStep(3);
+		setFlowType("free");
+
+		// Complete onboarding directly for free plan
+		posthog.capture("onboarding_completed", {
+			completedSteps: ["welcome", "referral", "plan-choice"],
+			flowType: "free",
+			referralSource: referralSource || "not_provided",
+			referralDetails: referralDetails || undefined,
+		});
+
+		try {
+			await completeOnboarding.mutateAsync({});
+			const queryKey = api.queryOptions("get", "/user/me").queryKey;
+			await queryClient.invalidateQueries({ queryKey });
+			router.push("/dashboard");
+		} catch (err) {
+			// Keep user on the current step and log the failure
+			console.error("Failed to complete onboarding:", err);
+		}
 	};
 
 	const handleReferralComplete = (source: string, details?: string) => {
