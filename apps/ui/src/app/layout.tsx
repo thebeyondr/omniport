@@ -8,16 +8,14 @@ import "./globals.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
-const geistMono = Geist_Mono({
+const geistSans = Geist({
+	variable: "--font-geist-sans",
 	subsets: ["latin"],
-	weight: ["400", "500", "600", "700"],
-	variable: "--font-geist-mono",
 });
 
-const geist = Geist({
+const geistMono = Geist_Mono({
+	variable: "--font-geist-mono",
 	subsets: ["latin"],
-	weight: ["400", "500", "600", "700"],
-	variable: "--font-geist",
 });
 
 export const dynamic = "force-dynamic";
@@ -51,13 +49,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 	const config = getConfig();
 
 	return (
-		<html
-			lang="en"
-			className={`${geist.variable} ${geistMono.variable}`}
-			suppressHydrationWarning
-		>
+		<html lang="en" suppressHydrationWarning>
 			<body
-				className={`min-h-screen font-sans antialiased ${geist.className} ${geistMono.className}`}
+				className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased`}
 			>
 				<Providers config={config}>{children}</Providers>
 			</body>
