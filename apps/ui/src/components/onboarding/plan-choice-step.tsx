@@ -138,7 +138,7 @@ export function PlanChoiceStep({
 			buttonText: "Contact Sales",
 			buttonVariant: "outline" as const,
 			buttonDisabled: false,
-			onClick: () => window.open("mailto:contact@llmgateway.io", "_blank"),
+			onClick: () => window.open(`mailto:${config.contactEmail}`, "_blank"),
 		},
 	];
 

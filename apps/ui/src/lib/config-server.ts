@@ -6,6 +6,7 @@ export interface AppConfig {
 	discordUrl: string;
 	twitterUrl: string;
 	docsUrl: string;
+	contactEmail: string;
 	posthogKey?: string;
 	posthogHost?: string;
 	crispId?: string;
@@ -22,6 +23,8 @@ export function getConfig(): AppConfig {
 		discordUrl: process.env.DISCORD_URL || "https://discord.gg/gcqcZeYWEz",
 		twitterUrl: process.env.TWITTER_URL || "https://x.com/llmgateway",
 		docsUrl: process.env.DOCS_URL || "http://localhost:3005",
+		contactEmail:
+			process.env.NEXT_PUBLIC_CONTACT_EMAIL || "contact@llmgateway.io",
 		posthogKey: process.env.POSTHOG_KEY,
 		posthogHost: process.env.POSTHOG_HOST,
 		crispId: process.env.CRISP_ID,
