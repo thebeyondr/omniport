@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Load fnm if available
-if [ -f ~/.local/share/fnm/fnm ]; then
+if command -v fnm >/dev/null 2>&1; then
+  eval "$(fnm env --shell bash)"
+elif [ -f ~/.local/share/fnm/fnm ]; then
   eval "$(~/.local/share/fnm/fnm env --shell bash)"
 fi
 
@@ -11,4 +13,4 @@ if ! command -v pnpm >/dev/null 2>&1; then
   exit 1
 fi
 
-pnpm commitlint --edit $1
+pnpm commitlint --edit "$1"
