@@ -23,6 +23,10 @@ export function WelcomeStep() {
 	const [isLocalhost, setIsLocalhost] = useState(false);
 
 	const createApiKeyMutation = api.useMutation("post", "/keys/api");
+	const completeOnboarding = api.useMutation(
+		"post",
+		"/user/me/complete-onboarding",
+	);
 
 	// Fetch existing API keys to check if one already exists
 	const { data: existingKeys, refetch: refetchKeys } = api.useQuery(
@@ -289,9 +293,30 @@ export function WelcomeStep() {
 						<div className="mt-6 text-center">
 							<Button
 								variant="outline"
-								onClick={() => router.push("/dashboard")}
+								onClick={async () => {
+									try {
+										await completeOnboarding.mutateAsync({});
+										const queryKey = api.queryOptions(
+											"get",
+											"/user/me",
+										).queryKey;
+										await queryClient.invalidateQueries({ queryKey });
+										router.push("/dashboard");
+									} catch (error) {
+										console.error("Failed to complete onboarding:", error);
+										toast({
+											title: "Error",
+											description:
+												"Failed to complete onboarding. Please try again.",
+											variant: "destructive",
+										});
+									}
+								}}
+								disabled={completeOnboarding.isPending}
 							>
-								Skip setup, go to dashboard
+								{completeOnboarding.isPending
+									? "Completing..."
+									: "Skip setup, go to dashboard"}
 							</Button>
 						</div>
 					)}
