@@ -10,6 +10,7 @@ import { Button } from "@/lib/components/button";
 import { Step } from "@/lib/components/stepper";
 import { toast } from "@/lib/components/use-toast";
 import { useApi } from "@/lib/fetch-client";
+import { isSelfHostedEnvironment } from "@/lib/utils/self-host";
 
 export function WelcomeStep() {
 	const { useSession } = useAuth();
@@ -47,15 +48,7 @@ export function WelcomeStep() {
 
 	// Detect localhost/self-hosting
 	useEffect(() => {
-		if (typeof window !== "undefined") {
-			const hostname = window.location.hostname;
-			setIsLocalhost(
-				hostname === "localhost" ||
-					hostname === "127.0.0.1" ||
-					hostname.includes("192.168.") ||
-					hostname.includes("10.0."),
-			);
-		}
+		setIsLocalhost(isSelfHostedEnvironment());
 	}, []);
 
 	// Refetch API keys when component mounts to get fresh data
@@ -125,7 +118,7 @@ export function WelcomeStep() {
 				variant: "destructive",
 			});
 		}
-	}, [user, defaultProject?.id, createApiKeyMutation]);
+	}, [user, defaultProject?.id, createApiKeyMutation, api, queryClient]);
 
 	// Auto-create API key on component mount only if no existing keys
 	useEffect(() => {
