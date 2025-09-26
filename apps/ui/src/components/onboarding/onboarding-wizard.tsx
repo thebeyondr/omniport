@@ -82,10 +82,15 @@ export function OnboardingWizard() {
 					referralSource: referralSource || "not_provided",
 					referralDetails: referralDetails || undefined,
 				});
-				await completeOnboarding.mutateAsync({});
-				const queryKey = api.queryOptions("get", "/user/me").queryKey;
-				await queryClient.invalidateQueries({ queryKey });
-				router.push("/dashboard");
+				try {
+					await completeOnboarding.mutateAsync({});
+					const queryKey = api.queryOptions("get", "/user/me").queryKey;
+					await queryClient.invalidateQueries({ queryKey });
+					router.push("/dashboard");
+				} catch (err) {
+					// Keep user on the current step and log the failure
+					console.error("Failed to complete onboarding:", err);
+				}
 				return;
 			}
 			// If plan is selected, continue to next step
