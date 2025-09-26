@@ -51,9 +51,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 	const config = getConfig();
 
 	return (
-		<html lang="en" suppressHydrationWarning>
+		<html
+			lang="en"
+			className={`${geist.variable} ${geistMono.variable}`}
+			suppressHydrationWarning
+		>
 			<body
-				className={`min-h-screen font-sans antialiased ${geist.className} ${geistMono.variable}`}
+				className={`min-h-screen font-sans antialiased ${geist.className} ${geistMono.className}`}
 			>
 				<Providers config={config}>{children}</Providers>
 			</body>
