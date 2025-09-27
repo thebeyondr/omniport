@@ -5,6 +5,7 @@ import { swaggerUI } from "@hono/swagger-ui";
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
+import { logger as honoLogger } from "hono/logger";
 import { z } from "zod";
 
 import { db } from "@llmgateway/db";
@@ -35,8 +36,19 @@ export const config = {
 
 export const app = new OpenAPIHono<ServerTypes>();
 
-// Add tracing middleware first
+const honoRequestLogger = honoLogger((message: string, ...args: any) => {
+	logger.info("request", {
+		kind: "request",
+		service: "api",
+		source: "hono-logger",
+		message,
+		args,
+	});
+});
+
+// Add tracing middleware first so instrumentation stays active for downstream handlers
 app.use("*", tracingMiddleware);
+app.use("*", honoRequestLogger);
 
 app.use(
 	"*",
