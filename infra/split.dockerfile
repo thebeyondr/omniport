@@ -112,14 +112,15 @@ ENTRYPOINT ["/tini", "--"]
 ARG APP_VERSION
 ENV APP_VERSION=$APP_VERSION
 
+# API preparation stage
+FROM builder AS api-prep
+WORKDIR /app
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=api --prod deploy /app/api-dist
+
+# API runtime stage
 FROM runtime AS api
-WORKDIR /app/temp
-COPY --from=builder /app/apps ./apps
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/.npmrc /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=api --prod deploy ../dist/api
-RUN rm -rf /app/temp
-WORKDIR /app/dist/api
+WORKDIR /app
+COPY --from=api-prep /app/api-dist ./
 # copy migrations files for API service to run migrations at runtime
 COPY --from=builder /app/packages/db/migrations ./migrations
 EXPOSE 80
@@ -128,64 +129,69 @@ ENV NODE_ENV=production
 ENV TELEMETRY_ACTIVE=true
 CMD ["node", "--enable-source-maps", "dist/serve.js"]
 
+# Gateway preparation stage
+FROM builder AS gateway-prep
+WORKDIR /app
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=gateway --prod deploy /app/gateway-dist
+
+# Gateway runtime stage
 FROM runtime AS gateway
-WORKDIR /app/temp
-COPY --from=builder /app/apps ./apps
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/.npmrc /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=gateway --prod deploy ../dist/gateway
-RUN rm -rf /app/temp
-WORKDIR /app/dist/gateway
+WORKDIR /app
+COPY --from=gateway-prep /app/gateway-dist ./
 EXPOSE 80
 ENV PORT=80
 ENV NODE_ENV=production
 CMD ["node", "--enable-source-maps", "dist/serve.js"]
 
+# UI preparation stage
+FROM builder AS ui-prep
+WORKDIR /app
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=ui --prod deploy /app/ui-dist
+
+# UI runtime stage
 FROM runtime AS ui
-WORKDIR /app/temp
-COPY --from=builder /app/apps ./apps
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/.npmrc /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=ui --prod deploy ../dist/ui
-RUN rm -rf /app/temp
-WORKDIR /app/dist/ui
+WORKDIR /app
+COPY --from=ui-prep /app/ui-dist ./
 EXPOSE 80
 ENV PORT=80
 ENV NODE_ENV=production
 CMD ["./node_modules/.bin/next", "start"]
 
+# Playground preparation stage
+FROM builder AS playground-prep
+WORKDIR /app
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=playground --prod deploy /app/playground-dist
+
+# Playground runtime stage
 FROM runtime AS playground
-WORKDIR /app/temp
-COPY --from=builder /app/apps ./apps
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/.npmrc /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=playground --prod deploy ../dist/playground
-RUN rm -rf /app/temp
-WORKDIR /app/dist/playground
+WORKDIR /app
+COPY --from=playground-prep /app/playground-dist ./
 EXPOSE 80
 ENV PORT=80
 ENV NODE_ENV=production
 CMD ["./node_modules/.bin/next", "start"]
 
+# Worker preparation stage
+FROM builder AS worker-prep
+WORKDIR /app
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=worker --prod deploy /app/worker-dist
+
+# Worker runtime stage
 FROM runtime AS worker
-WORKDIR /app/temp
-COPY --from=builder /app/apps ./apps
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/.npmrc /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=worker --prod deploy ../dist/worker
-RUN rm -rf /app/temp
-WORKDIR /app/dist/worker
+WORKDIR /app
+COPY --from=worker-prep /app/worker-dist ./
 ENV NODE_ENV=production
 CMD ["node", "--enable-source-maps", "dist/index.js"]
 
+# Docs preparation stage
+FROM builder AS docs-prep
+WORKDIR /app
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=docs --prod deploy /app/docs-dist
+
+# Docs runtime stage
 FROM runtime AS docs
-WORKDIR /app/temp
-COPY --from=builder /app/apps ./apps
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/.npmrc /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=docs --prod deploy ../dist/docs
-RUN rm -rf /app/temp
-WORKDIR /app/dist/docs
+WORKDIR /app
+COPY --from=docs-prep /app/docs-dist ./
 EXPOSE 80
 ENV PORT=80
 ENV NODE_ENV=production
