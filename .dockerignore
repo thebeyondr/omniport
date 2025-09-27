@@ -12,6 +12,7 @@
 **/.vercel
 **/.output
 **/.source
+.conductor
 
 packages/**/*.js
 apps/**/*.js
