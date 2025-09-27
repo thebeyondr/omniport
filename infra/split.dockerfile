@@ -1,5 +1,5 @@
-# Build stage - everything in one stage for maximum GitHub Actions caching
-FROM debian:12-slim AS builder
+# Base builder with Node.js and pnpm
+FROM debian:12-slim AS base-builder
 
 # Install base dependencies including tini for better caching
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -71,7 +71,7 @@ RUN STORE_PATH="/root/.local/share/pnpm/store" && \
     fi && \
     echo "pnpm store path matches: ${STORE_PATH}"
 
-# Copy package files and install dependencies
+# Copy package files
 COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json ./apps/api/
 COPY apps/docs/package.json ./apps/docs/
@@ -86,23 +86,48 @@ COPY packages/cache/package.json ./packages/cache/
 COPY packages/instrumentation/package.json ./packages/instrumentation/
 COPY packages/shared/package.json ./packages/shared/
 
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
-
 # Copy source code
 COPY . .
 
-# Build all apps
-RUN --mount=type=cache,target=/app/.turbo pnpm build
+# Builder for API
+FROM base-builder AS api-builder
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=api... install --frozen-lockfile
+RUN --mount=type=cache,target=/app/.turbo pnpm --filter=api... build
+
+# Builder for Gateway
+FROM base-builder AS gateway-builder
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=gateway... install --frozen-lockfile
+RUN --mount=type=cache,target=/app/.turbo pnpm --filter=gateway... build
+
+# Builder for UI
+FROM base-builder AS ui-builder
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=ui... install --frozen-lockfile
+RUN --mount=type=cache,target=/app/.turbo pnpm --filter=ui... build
+
+# Builder for Playground
+FROM base-builder AS playground-builder
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=playground... install --frozen-lockfile
+RUN --mount=type=cache,target=/app/.turbo pnpm --filter=playground... build
+
+# Builder for Worker
+FROM base-builder AS worker-builder
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=worker... install --frozen-lockfile
+RUN --mount=type=cache,target=/app/.turbo pnpm --filter=worker... build
+
+# Builder for Docs
+FROM base-builder AS docs-builder
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=docs... install --frozen-lockfile
+RUN --mount=type=cache,target=/app/.turbo pnpm --filter=docs... build
 
 FROM debian:12-slim AS runtime
 
 # Install base runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends bash && rm -rf /var/lib/apt/lists/*
 
-# copy nodejs, pnpm, and tini from builder stage
-COPY --from=builder /usr/local/bin/node /usr/local/bin/node
-COPY --from=builder /usr/local/bin/pnpm /usr/local/bin/pnpm
-COPY --from=builder /usr/bin/tini /tini
+# copy nodejs, pnpm, and tini from base-builder stage
+COPY --from=base-builder /usr/local/bin/node /usr/local/bin/node
+COPY --from=base-builder /usr/local/bin/pnpm /usr/local/bin/pnpm
+COPY --from=base-builder /usr/bin/tini /tini
 
 # Verify installations
 RUN node -v && pnpm -v
@@ -113,7 +138,7 @@ ARG APP_VERSION
 ENV APP_VERSION=$APP_VERSION
 
 # API preparation stage
-FROM builder AS api-prep
+FROM api-builder AS api-prep
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=api --prod deploy /app/api-dist
 
@@ -122,7 +147,7 @@ FROM runtime AS api
 WORKDIR /app
 COPY --from=api-prep /app/api-dist ./
 # copy migrations files for API service to run migrations at runtime
-COPY --from=builder /app/packages/db/migrations ./migrations
+COPY --from=api-builder /app/packages/db/migrations ./migrations
 EXPOSE 80
 ENV PORT=80
 ENV NODE_ENV=production
@@ -130,7 +155,7 @@ ENV TELEMETRY_ACTIVE=true
 CMD ["node", "--enable-source-maps", "dist/serve.js"]
 
 # Gateway preparation stage
-FROM builder AS gateway-prep
+FROM gateway-builder AS gateway-prep
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=gateway --prod deploy /app/gateway-dist
 
@@ -144,7 +169,7 @@ ENV NODE_ENV=production
 CMD ["node", "--enable-source-maps", "dist/serve.js"]
 
 # UI preparation stage
-FROM builder AS ui-prep
+FROM ui-builder AS ui-prep
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=ui --prod deploy /app/ui-dist
 
@@ -158,7 +183,7 @@ ENV NODE_ENV=production
 CMD ["./node_modules/.bin/next", "start"]
 
 # Playground preparation stage
-FROM builder AS playground-prep
+FROM playground-builder AS playground-prep
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=playground --prod deploy /app/playground-dist
 
@@ -172,7 +197,7 @@ ENV NODE_ENV=production
 CMD ["./node_modules/.bin/next", "start"]
 
 # Worker preparation stage
-FROM builder AS worker-prep
+FROM worker-builder AS worker-prep
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=worker --prod deploy /app/worker-dist
 
@@ -184,7 +209,7 @@ ENV NODE_ENV=production
 CMD ["node", "--enable-source-maps", "dist/index.js"]
 
 # Docs preparation stage
-FROM builder AS docs-prep
+FROM docs-builder AS docs-prep
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=docs --prod deploy /app/docs-dist
 
