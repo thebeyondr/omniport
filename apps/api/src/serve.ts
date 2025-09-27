@@ -20,7 +20,7 @@ async function startServer() {
 
 	// Initialize tracing for API service
 	try {
-		sdk = await initializeInstrumentation({
+		sdk = initializeInstrumentation({
 			serviceName: process.env.OTEL_SERVICE_NAME || "llmgateway-api",
 			projectId: process.env.GOOGLE_CLOUD_PROJECT,
 		});

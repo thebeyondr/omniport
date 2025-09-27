@@ -9,6 +9,7 @@ import { z } from "zod";
 
 import { redisClient } from "@llmgateway/cache";
 import { db } from "@llmgateway/db";
+import { createRequestLifecycleMiddleware } from "@llmgateway/instrumentation";
 import { logger } from "@llmgateway/logger";
 import { HealthChecker } from "@llmgateway/shared";
 
@@ -60,8 +61,13 @@ const honoRequestLogger = honoLogger((message: string, ...args: any) => {
 	});
 });
 
+const requestLifecycleMiddleware = createRequestLifecycleMiddleware({
+	serviceName: "llmgateway-gateway-lifecycle",
+});
+
 // Add tracing middleware first so instrumentation stays active for downstream handlers
 app.use("*", tracingMiddleware);
+app.use("*", requestLifecycleMiddleware);
 app.use("*", honoRequestLogger);
 
 // Middleware to check for application/json content type on POST requests

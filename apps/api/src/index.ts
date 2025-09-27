@@ -9,6 +9,7 @@ import { logger as honoLogger } from "hono/logger";
 import { z } from "zod";
 
 import { db } from "@llmgateway/db";
+import { createRequestLifecycleMiddleware } from "@llmgateway/instrumentation";
 import { logger } from "@llmgateway/logger";
 import { HealthChecker } from "@llmgateway/shared";
 
@@ -46,8 +47,13 @@ const honoRequestLogger = honoLogger((message: string, ...args: any) => {
 	});
 });
 
+const requestLifecycleMiddleware = createRequestLifecycleMiddleware({
+	serviceName: "llmgateway-api-lifecycle",
+});
+
 // Add tracing middleware first so instrumentation stays active for downstream handlers
 app.use("*", tracingMiddleware);
+app.use("*", requestLifecycleMiddleware);
 app.use("*", honoRequestLogger);
 
 app.use(
