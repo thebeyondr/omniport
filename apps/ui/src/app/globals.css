@@ -7,10 +7,12 @@
 
 body {
 	@apply m-0;
-	font-family:
-		var(--font-geist-sans),
+	font-family: var(
+		--font-geist-sans,
+		system-ui,
 		-apple-system,
 		BlinkMacSystemFont,
+		"Inter",
 		"Segoe UI",
 		"Roboto",
 		"Oxygen",
@@ -19,7 +21,8 @@ body {
 		"Fira Sans",
 		"Droid Sans",
 		"Helvetica Neue",
-		sans-serif;
+		sans-serif
+	);
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
