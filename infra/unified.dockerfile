@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1-labs
 FROM debian:12-slim
 
 # Install base dependencies and runtime requirements
@@ -81,18 +82,8 @@ RUN asdf plugin add nodejs && \
 
 # Copy package files
 COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
-COPY apps/api/package.json ./apps/api/
-COPY apps/docs/package.json ./apps/docs/
-COPY apps/gateway/package.json ./apps/gateway/
-COPY apps/playground/package.json ./apps/playground/
-COPY apps/ui/package.json ./apps/ui/
-COPY apps/worker/package.json ./apps/worker/
-COPY packages/db/package.json ./packages/db/
-COPY packages/models/package.json ./packages/models/
-COPY packages/logger/package.json ./packages/logger/
-COPY packages/cache/package.json ./packages/cache/
-COPY packages/instrumentation/package.json ./packages/instrumentation/
-COPY packages/shared/package.json ./packages/shared/
+COPY --parents packages/*/package.json .
+COPY --parents apps/*/package.json .
 
 # Copy source code
 COPY . .
