@@ -92,21 +92,7 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
 COPY . .
 
 # Install all dependencies, build, then prune to production only
-RUN --mount=type=cache,target=/app/.turbo \
-    pnpm build && \
-    # Remove all dev dependencies after build
-    pnpm prune --force --prod && \
-    # Clean up source files that are not needed at runtime
-    find . -name "*.ts" -not -path "*/node_modules/*" -not -name "*.d.ts" -delete && \
-    find . -name "*.tsx" -not -path "*/node_modules/*" -delete && \
-    find . -name "*.map" -not -path "*/node_modules/*" -delete && \
-    find . -name ".turbo" -type d -exec rm -rf {} + 2>/dev/null || true && \
-    find . -name "tsconfig.tsbuildinfo" -delete && \
-    rm -rf apps/*/src packages/*/src && \
-    # Remove unnecessary Next.js cache and build files
-    rm -rf apps/*/.next/cache && \
-    # Clean up package manager files
-    rm -rf .pnpm-store
+RUN --mount=type=cache,target=/app/.turbo pnpm build
 
 # Copy database init scripts
 COPY packages/db/init/ /docker-entrypoint-initdb.d/
@@ -129,14 +115,6 @@ RUN mkdir -p /var/log/supervisor /var/log/postgresql /run/postgresql && \
 
 # Configure Supervisor
 COPY infra/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Update supervisord.conf to use the correct paths
-RUN sed -i 's|/app/services/ui|/app/apps/ui|g' /etc/supervisor/conf.d/supervisord.conf && \
-    sed -i 's|/app/services/playground|/app/apps/playground|g' /etc/supervisor/conf.d/supervisord.conf && \
-    sed -i 's|/app/services/docs|/app/apps/docs|g' /etc/supervisor/conf.d/supervisord.conf && \
-    sed -i 's|/app/services/api|/app/apps/api|g' /etc/supervisor/conf.d/supervisord.conf && \
-    sed -i 's|/app/services/gateway|/app/apps/gateway|g' /etc/supervisor/conf.d/supervisord.conf && \
-    sed -i 's|/app/services/worker|/app/apps/worker|g' /etc/supervisor/conf.d/supervisord.conf
 
 # Create startup script
 COPY infra/start.sh /start.sh

@@ -52,7 +52,6 @@ RUN STORE_PATH="/root/.local/share/pnpm/store" && \
     echo "pnpm store path matches: ${STORE_PATH}"
 
 # Builder for API
-# syntax=docker/dockerfile:1-labs
 FROM base-builder AS api-builder
 COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY --parents packages/**/package.json .
@@ -62,7 +61,6 @@ COPY . .
 RUN --mount=type=cache,target=/app/.turbo pnpm run build --filter=api
 
 # Builder for Gateway
-# syntax=docker/dockerfile:1-labs
 FROM base-builder AS gateway-builder
 COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY --parents packages/**/package.json .
@@ -72,7 +70,6 @@ COPY . .
 RUN --mount=type=cache,target=/app/.turbo pnpm run build --filter=gateway
 
 # Builder for UI
-# syntax=docker/dockerfile:1-labs
 FROM base-builder AS ui-builder
 COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY --parents packages/**/package.json .
@@ -82,7 +79,6 @@ COPY . .
 RUN --mount=type=cache,target=/app/.turbo pnpm run build --filter=ui
 
 # Builder for Playground
-# syntax=docker/dockerfile:1-labs
 FROM base-builder AS playground-builder
 COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY --parents packages/**/package.json .
@@ -92,7 +88,6 @@ COPY . .
 RUN --mount=type=cache,target=/app/.turbo pnpm run build --filter=playground
 
 # Builder for Worker
-# syntax=docker/dockerfile:1-labs
 FROM base-builder AS worker-builder
 COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY --parents packages/**/package.json .
@@ -102,7 +97,6 @@ COPY . .
 RUN --mount=type=cache,target=/app/.turbo pnpm run build --filter=worker
 
 # Builder for Docs
-# syntax=docker/dockerfile:1-labs
 FROM base-builder AS docs-builder
 COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY --parents packages/**/package.json .
@@ -145,7 +139,6 @@ WORKDIR /app
 COPY --from=api-prep /app/api-dist ./
 # copy migrations files for API service to run migrations at runtime
 COPY --from=api-builder /app/packages/db/migrations ./migrations
-# copy .tool-versions for asdf to work
 COPY --from=base-builder /app/.tool-versions ./
 EXPOSE 80
 ENV PORT=80
@@ -162,44 +155,45 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=gatewa
 FROM runtime AS gateway
 WORKDIR /app
 COPY --from=gateway-prep /app/gateway-dist ./
-# copy .tool-versions for asdf to work
 COPY --from=base-builder /app/.tool-versions ./
 EXPOSE 80
 ENV PORT=80
 ENV NODE_ENV=production
 CMD ["node", "--enable-source-maps", "dist/serve.js"]
 
-# UI preparation stage
-FROM ui-builder AS ui-prep
-WORKDIR /app
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=ui --prod deploy /app/ui-dist
-
 # UI runtime stage
 FROM runtime AS ui
 WORKDIR /app
-COPY --from=ui-prep /app/ui-dist ./
-# copy .tool-versions for asdf to work
 COPY --from=base-builder /app/.tool-versions ./
+
+# Copy the ENTIRE standalone output - this is self-contained
+COPY --from=ui-builder /app/apps/ui/.next/standalone/ ./
+
 EXPOSE 80
 ENV PORT=80
 ENV NODE_ENV=production
-CMD ["./node_modules/.bin/next", "start"]
+ENV HOSTNAME="0.0.0.0"
 
-# Playground preparation stage
-FROM playground-builder AS playground-prep
-WORKDIR /app
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=playground --prod deploy /app/playground-dist
+# Set working directory to where server.js is located in Docker build
+WORKDIR /app/apps/ui
+CMD ["node", "server.js"]
 
 # Playground runtime stage
 FROM runtime AS playground
 WORKDIR /app
-COPY --from=playground-prep /app/playground-dist ./
-# copy .tool-versions for asdf to work
 COPY --from=base-builder /app/.tool-versions ./
+
+# Copy the ENTIRE standalone output - this is self-contained
+COPY --from=playground-builder /app/apps/playground/.next/standalone/ ./
+
 EXPOSE 80
 ENV PORT=80
 ENV NODE_ENV=production
-CMD ["./node_modules/.bin/next", "start"]
+ENV HOSTNAME="0.0.0.0"
+
+# Set working directory to where server.js is located in Docker build
+WORKDIR /app/apps/playground
+CMD ["node", "server.js"]
 
 # Worker preparation stage
 FROM worker-builder AS worker-prep
@@ -210,23 +204,23 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=worker
 FROM runtime AS worker
 WORKDIR /app
 COPY --from=worker-prep /app/worker-dist ./
-# copy .tool-versions for asdf to work
 COPY --from=base-builder /app/.tool-versions ./
 ENV NODE_ENV=production
 CMD ["node", "--enable-source-maps", "dist/index.js"]
 
-# Docs preparation stage
-FROM docs-builder AS docs-prep
-WORKDIR /app
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=docs --prod deploy /app/docs-dist
-
 # Docs runtime stage
 FROM runtime AS docs
 WORKDIR /app
-COPY --from=docs-prep /app/docs-dist ./
-# copy .tool-versions for asdf to work
 COPY --from=base-builder /app/.tool-versions ./
+
+# Copy the ENTIRE standalone output - this is self-contained
+COPY --from=docs-builder /app/apps/docs/.next/standalone/ ./
+
 EXPOSE 80
 ENV PORT=80
 ENV NODE_ENV=production
-CMD ["./node_modules/.bin/next", "start", "-H", "0.0.0.0"]
+ENV HOSTNAME="0.0.0.0"
+
+# Set working directory to where server.js is located in Docker build
+WORKDIR /app/apps/docs
+CMD ["node", "server.js"]

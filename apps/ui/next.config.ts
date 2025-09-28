@@ -1,9 +1,13 @@
+import { join } from "path";
+
 import { withContentCollections } from "@content-collections/next";
 
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+	outputFileTracingRoot: join(__dirname, "../../"),
 	distDir: process.env.NODE_ENV === "development" ? ".next-dev" : ".next",
+	output: "standalone",
 	productionBrowserSourceMaps: true,
 	eslint: {
 		ignoreDuringBuilds: true,
