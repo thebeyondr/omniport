@@ -95,7 +95,7 @@ COPY . .
 RUN --mount=type=cache,target=/app/.turbo \
     pnpm build && \
     # Remove all dev dependencies after build
-    pnpm prune --prod && \
+    pnpm prune --force --prod && \
     # Clean up source files that are not needed at runtime
     find . -name "*.ts" -not -path "*/node_modules/*" -not -name "*.d.ts" -delete && \
     find . -name "*.tsx" -not -path "*/node_modules/*" -delete && \
