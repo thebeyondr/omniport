@@ -85,13 +85,14 @@ COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY --parents packages/*/package.json .
 COPY --parents apps/*/package.json .
 
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
+
 # Copy source code
 COPY . .
 
 # Install all dependencies, build, then prune to production only
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-    --mount=type=cache,target=/app/.turbo \
-    pnpm install --frozen-lockfile && \
+RUN --mount=type=cache,target=/app/.turbo \
     pnpm build && \
     # Remove all dev dependencies after build
     pnpm prune --prod && \
