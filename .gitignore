@@ -15,4 +15,3 @@ llmgateway_data
 http
 *.txt
 docker-compose-override-*.yml
-*.out

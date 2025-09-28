@@ -12,7 +12,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tini \
     wget \
     git \
-    unzip \
     && rm -rf /var/lib/apt/lists/* \
     && /usr/bin/tini --version
 
@@ -42,8 +41,7 @@ RUN cat .tool-versions | cut -d' ' -f1 | grep "^[^\#]" | xargs -i asdf plugin ad
     # Verify installations
     echo "Final versions installed:" && \
     node -v && \
-    pnpm -v && \
-    bun -v
+    pnpm -v
 
 # verify that pnpm store path
 RUN STORE_PATH="/root/.local/share/pnpm/store" && \
@@ -130,28 +128,38 @@ ENTRYPOINT ["/tini", "--"]
 ARG APP_VERSION
 ENV APP_VERSION=$APP_VERSION
 
-# API runtime stage
-FROM debian:12-slim AS api
+# API preparation stage
+FROM api-builder AS api-prep
 WORKDIR /app
-# Copy only the standalone executable
-COPY --from=api-builder /app/apps/api/dist/api.out ./api.out
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=api --prod deploy /app/api-dist
+
+# API runtime stage
+FROM runtime AS api
+WORKDIR /app
+COPY --from=api-prep /app/api-dist ./
 # copy migrations files for API service to run migrations at runtime
 COPY --from=api-builder /app/packages/db/migrations ./migrations
+COPY --from=base-builder /app/.tool-versions ./
 EXPOSE 80
 ENV PORT=80
 ENV NODE_ENV=production
 ENV TELEMETRY_ACTIVE=true
-CMD ["./api.out"]
+CMD ["node", "--enable-source-maps", "dist/serve.js"]
+
+# Gateway preparation stage
+FROM gateway-builder AS gateway-prep
+WORKDIR /app
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=gateway --prod deploy /app/gateway-dist
 
 # Gateway runtime stage
-FROM debian:12-slim AS gateway
+FROM runtime AS gateway
 WORKDIR /app
-# Copy only the standalone executable
-COPY --from=gateway-builder /app/apps/gateway/dist/gateway.out ./gateway.out
+COPY --from=gateway-prep /app/gateway-dist ./
+COPY --from=base-builder /app/.tool-versions ./
 EXPOSE 80
 ENV PORT=80
 ENV NODE_ENV=production
-CMD ["./gateway.out"]
+CMD ["node", "--enable-source-maps", "dist/serve.js"]
 
 # UI runtime stage
 FROM runtime AS ui
@@ -168,7 +176,7 @@ ENV HOSTNAME="0.0.0.0"
 
 # Set working directory to where server.js is located in Docker build
 WORKDIR /app/apps/ui
-CMD ["bun", "server.js"]
+CMD ["node", "server.js"]
 
 # Playground runtime stage
 FROM runtime AS playground
@@ -185,15 +193,20 @@ ENV HOSTNAME="0.0.0.0"
 
 # Set working directory to where server.js is located in Docker build
 WORKDIR /app/apps/playground
-CMD ["bun", "server.js"]
+CMD ["node", "server.js"]
+
+# Worker preparation stage
+FROM worker-builder AS worker-prep
+WORKDIR /app
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm --filter=worker --prod deploy /app/worker-dist
 
 # Worker runtime stage
-FROM debian:12-slim AS worker
+FROM runtime AS worker
 WORKDIR /app
-# Copy only the standalone executable
-COPY --from=worker-builder /app/apps/worker/dist/worker.out ./worker.out
+COPY --from=worker-prep /app/worker-dist ./
+COPY --from=base-builder /app/.tool-versions ./
 ENV NODE_ENV=production
-CMD ["./worker.out"]
+CMD ["node", "--enable-source-maps", "dist/index.js"]
 
 # Docs runtime stage
 FROM runtime AS docs
@@ -210,4 +223,4 @@ ENV HOSTNAME="0.0.0.0"
 
 # Set working directory to where server.js is located in Docker build
 WORKDIR /app/apps/docs
-CMD ["bun", "server.js"]
+CMD ["node", "server.js"]

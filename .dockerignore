@@ -18,4 +18,3 @@
 
 packages/**/*.js
 apps/**/*.js
-**/*.out
