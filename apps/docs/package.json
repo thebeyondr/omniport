@@ -10,8 +10,7 @@
 		"openapi.json"
 	],
 	"scripts": {
-		"build": "fumadocs-mdx && next build && cp ../gateway/openapi.json .",
-		"build2": "fumadocs-mdx && tsc && next build && cp ../gateway/openapi.json .",
+		"build": "fumadocs-mdx && next build && cp ../gateway/openapi.json . && cp ./openapi.json ./.next/standalone/apps/docs/ && mkdir -p .next/static && cp -r .next/static .next/standalone/apps/docs/.next/ && test -d public && cp -r public .next/standalone/apps/docs/",
 		"dev": "next dev --turbo --port 3005",
 		"format": "eslint --fix . && prettier --write .",
 		"gen-docs": "node scripts/generate-docs.mjs",
@@ -22,10 +21,10 @@
 	},
 	"dependencies": {
 		"class-variance-authority": "^0.7.1",
-		"fumadocs-core": "15.7.7",
-		"fumadocs-mdx": "11.7.5",
-		"fumadocs-openapi": "9.3.3",
-		"fumadocs-ui": "15.6.10",
+		"fumadocs-core": "15.8.1",
+		"fumadocs-mdx": "12.0.1",
+		"fumadocs-openapi": "9.3.13",
+		"fumadocs-ui": "15.8.1",
 		"gateway": "workspace:*",
 		"lucide-react": "^0.544.0",
 		"next": "15.5.2",
@@ -35,7 +34,7 @@
 		"remark": "15.0.1",
 		"remark-gfm": "4.0.1",
 		"remark-mdx": "3.1.1",
-		"shiki": "3.12.0",
+		"shiki": "3.13.0",
 		"tailwind-merge": "^3.3.1"
 	},
 	"devDependencies": {

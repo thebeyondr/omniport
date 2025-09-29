@@ -20,7 +20,7 @@ let sdk: NodeSDK | null = null;
 async function startServer() {
 	// Initialize tracing for gateway service
 	try {
-		sdk = await initializeInstrumentation({
+		sdk = initializeInstrumentation({
 			serviceName: process.env.OTEL_SERVICE_NAME || "llmgateway-gateway",
 			projectId: process.env.GOOGLE_CLOUD_PROJECT,
 		});

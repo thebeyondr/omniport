@@ -9,9 +9,12 @@
 **/openapi.json
 **/.vinxi
 **/.next
+**/.next-dev
 **/.vercel
 **/.output
 **/.source
+**/.content-collections
+.conductor
 
 packages/**/*.js
 apps/**/*.js

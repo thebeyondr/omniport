@@ -4,10 +4,12 @@ import "dotenv/config";
 import { swaggerUI } from "@hono/swagger-ui";
 import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
 import { HTTPException } from "hono/http-exception";
+import { logger as honoLogger } from "hono/logger";
 import { z } from "zod";
 
 import { redisClient } from "@llmgateway/cache";
 import { db } from "@llmgateway/db";
+import { createRequestLifecycleMiddleware } from "@llmgateway/instrumentation";
 import { logger } from "@llmgateway/logger";
 import { HealthChecker } from "@llmgateway/shared";
 
@@ -49,8 +51,24 @@ export const config = {
 
 export const app = new OpenAPIHono<ServerTypes>();
 
-// Add tracing middleware first
+const honoRequestLogger = honoLogger((message: string, ...args: any) => {
+	logger.info("request", {
+		kind: "request",
+		service: "gateway",
+		source: "hono-logger",
+		message,
+		args,
+	});
+});
+
+const requestLifecycleMiddleware = createRequestLifecycleMiddleware({
+	serviceName: "llmgateway-gateway-lifecycle",
+});
+
+// Add tracing middleware first so instrumentation stays active for downstream handlers
 app.use("*", tracingMiddleware);
+app.use("*", requestLifecycleMiddleware);
+app.use("*", honoRequestLogger);
 
 // Middleware to check for application/json content type on POST requests
 app.use("*", async (c, next) => {
