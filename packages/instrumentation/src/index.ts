@@ -229,9 +229,9 @@ export interface InstrumentationConfig {
 	projectId?: string;
 }
 
-export async function initializeInstrumentation(
+export function initializeInstrumentation(
 	config: InstrumentationConfig,
-): Promise<NodeSDK> {
+): NodeSDK {
 	const projectId = config.projectId || process.env.GOOGLE_CLOUD_PROJECT;
 
 	// Use Google Cloud Trace exporter for direct integration
@@ -268,7 +268,8 @@ export async function initializeInstrumentation(
 	});
 
 	try {
-		await sdk.start();
+		sdk.start();
+
 		logger.info(
 			`OpenTelemetry started successfully for project: ${projectId || "(not set)"}, service: ${config.serviceName}`,
 		);
@@ -276,9 +277,6 @@ export async function initializeInstrumentation(
 			projectId,
 			serviceName: config.serviceName,
 			samplingDescription,
-			exporter: "Google Cloud Trace",
-			processor: "BatchSpanProcessor",
-			propagators: ["Google Cloud Trace", "W3C Trace Context", "W3C Baggage"],
 		});
 
 		// Validate authentication
@@ -317,3 +315,9 @@ export {
 	createTracingMiddleware,
 	type TracingMiddlewareOptions,
 } from "./middleware.js";
+
+// Re-export request lifecycle middleware
+export {
+	createRequestLifecycleMiddleware,
+	type RequestLifecycleMiddlewareOptions,
+} from "./request-lifecycle.js";
