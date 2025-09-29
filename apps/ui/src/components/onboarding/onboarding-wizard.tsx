@@ -36,7 +36,7 @@ const getSteps = (flowType: FlowType) => [
 	},
 	{
 		id: "plan-choice",
-		title: "Choose your approach",
+		title: "Choose plan",
 	},
 	{
 		id: flowType === "credits" ? "credits" : "provider-key",
@@ -209,7 +209,7 @@ export function OnboardingWizard() {
 			}),
 			// Referral step shows dynamic text based on user state
 			...(index === 1 && {
-				customNextText: "Next: Choose your approach",
+				customNextText: "Next: Choose plan",
 			}),
 			// Make plan choice step show dynamic text based on selected plan
 			...(index === 2 && {

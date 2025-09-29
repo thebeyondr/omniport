@@ -161,7 +161,7 @@ export function PlanChoiceStep({
 		<Step className="w-full">
 			<div className="w-full flex flex-col gap-6">
 				<div className="flex flex-col gap-2 text-center">
-					<h1 className="text-3xl font-semibold">Choose your approach</h1>
+					<h1 className="text-3xl font-semibold">Choose plan</h1>
 					<p className="text-muted-foreground">
 						{isLocalhost
 							? "You're self-hosting (detected) - explore all your options below, or skip to continue with what you have."
